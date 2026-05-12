@@ -1,4 +1,4 @@
-const CACHE_NAME = "amitec-v1";
+const CACHE_NAME = "amitec-v2";
 
 // Assets to pre-cache on install
 const PRECACHE_URLS = [
@@ -24,6 +24,20 @@ self.addEventListener("activate", (event) => {
     )
   );
   self.clients.claim();
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  event.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+      // If app is already open, focus it
+      for (const client of clientList) {
+        if ("focus" in client) return client.focus();
+      }
+      // Otherwise open it
+      return clients.openWindow("/dashboard");
+    })
+  );
 });
 
 self.addEventListener("fetch", (event) => {

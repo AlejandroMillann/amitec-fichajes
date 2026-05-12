@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { ThemeToggle } from "./ThemeToggle";
-import { Bell, CheckCircle2, XCircle, FileText, Zap, X } from "lucide-react";
+import { Bell, CheckCircle2, XCircle, FileText, Zap, X, BellOff, BellRing } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNotifications, type AppNotification } from "@/hooks/useNotifications";
@@ -95,7 +95,7 @@ function NotifItem({ n, onRead }: { n: AppNotification; onRead: (id: string) => 
 export function TopBar({ title, subtitle, showNotifications = true, rightElement }: TopBarProps) {
   const [notifOpen, setNotifOpen] = useState(false);
   const { user } = useAuth();
-  const { notifications, markAsRead, markAllAsRead } = useNotifications();
+  const { notifications, permission, requestPermission, markAsRead, markAllAsRead } = useNotifications();
   const panelRef = useRef<HTMLDivElement>(null);
 
   const userNotifs = user
@@ -236,6 +236,39 @@ export function TopBar({ title, subtitle, showNotifications = true, rightElement
                 </button>
               </div>
             </div>
+
+            {/* Push permission banner */}
+            {permission === "default" && (
+              <div
+                className="mx-3 my-2 px-3 py-3 rounded-2xl flex items-center gap-3"
+                style={{ background: "var(--primary-light)", border: "1px solid rgba(14,165,233,0.2)" }}
+              >
+                <BellOff size={16} style={{ color: "var(--primary)", flexShrink: 0 }} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold" style={{ color: "var(--primary)" }}>
+                    Recibe avisos en tu móvil
+                  </p>
+                  <p className="text-[10px] mt-0.5" style={{ color: "var(--text-secondary)" }}>
+                    Notificaciones aunque la app esté cerrada
+                  </p>
+                </div>
+                <button
+                  onClick={requestPermission}
+                  className="flex-shrink-0 px-3 py-1.5 rounded-xl text-[11px] font-bold text-white"
+                  style={{ background: "var(--primary)" }}
+                >
+                  Activar
+                </button>
+              </div>
+            )}
+            {permission === "granted" && (
+              <div className="flex items-center gap-1.5 px-4 py-2">
+                <BellRing size={11} style={{ color: "var(--success)" }} />
+                <p className="text-[10px]" style={{ color: "var(--success)" }}>
+                  Notificaciones activadas
+                </p>
+              </div>
+            )}
 
             {/* Notification list */}
             <AnimatePresence>

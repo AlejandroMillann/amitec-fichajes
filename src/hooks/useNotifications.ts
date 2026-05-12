@@ -50,11 +50,37 @@ function loadNotifications(): AppNotification[] {
   }
 }
 
+async function fireNativeNotification(title: string, body: string) {
+  if (typeof window === "undefined") return;
+  if (!("Notification" in window)) return;
+  if (Notification.permission !== "granted") return;
+
+  try {
+    // Prefer service worker showNotification (works in background)
+    if ("serviceWorker" in navigator) {
+      const reg = await navigator.serviceWorker.ready;
+      await reg.showNotification(title, {
+        body,
+        icon: "/icons/icon-192.png",
+        badge: "/icons/icon-192.png",
+        tag: "amitec-notif",
+        renotify: true,
+      });
+      return;
+    }
+  } catch {
+    // fallback below
+  }
+  new Notification(title, { body, icon: "/icons/icon-192.png" });
+}
+
 export function useNotifications() {
   const [notifications, setNotifications] = useState<AppNotification[]>(SEED);
+  const [permission, setPermission] = useState<NotificationPermission>("default");
 
   useEffect(() => {
     setNotifications(loadNotifications());
+    if ("Notification" in window) setPermission(Notification.permission);
   }, []);
 
   useEffect(() => {
@@ -62,6 +88,13 @@ export function useNotifications() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(notifications));
     }
   }, [notifications]);
+
+  const requestPermission = useCallback(async () => {
+    if (!("Notification" in window)) return "denied" as NotificationPermission;
+    const result = await Notification.requestPermission();
+    setPermission(result);
+    return result;
+  }, []);
 
   const addNotification = useCallback((n: Omit<AppNotification, "id" | "timestamp" | "read">) => {
     const newNotif: AppNotification = {
@@ -71,6 +104,7 @@ export function useNotifications() {
       read: false,
     };
     setNotifications((prev) => [newNotif, ...prev]);
+    fireNativeNotification(n.title, n.message);
   }, []);
 
   const markAsRead = useCallback((id: string) => {
@@ -85,5 +119,5 @@ export function useNotifications() {
     );
   }, []);
 
-  return { notifications, addNotification, markAsRead, markAllAsRead };
+  return { notifications, permission, requestPermission, addNotification, markAsRead, markAllAsRead };
 }
