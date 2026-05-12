@@ -50,6 +50,8 @@ export interface VacationRequest {
   days: number;
   status: RequestStatus;
   notes?: string;
+  attachment?: string;      // base64 data URL
+  attachmentName?: string;  // original filename
   createdAt: string;
   reviewedAt?: string;
   reviewedBy?: string;

@@ -10,11 +10,11 @@ import { formatDateShort, getInitials } from "@/lib/utils";
 
 const containerVariants = {
   hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.05 } },
+  show: { opacity: 1, transition: { staggerChildren: 0.04 } },
 };
 const itemVariants = {
-  hidden: { opacity: 0, y: 12 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] } },
+  hidden: { opacity: 0, y: 8 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.2, ease: [0.16, 1, 0.3, 1] } },
 };
 
 const DEPT_COLORS: Record<string, string> = {
@@ -179,13 +179,14 @@ export default function EmpleadosPage() {
         ))}
       </motion.div>
 
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode="sync">
         {activeTab === "empleados" ? (
           <motion.div
             key="empleados"
-            initial={{ opacity: 0, y: 8 }}
+            initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.15 }}
             className="space-y-4"
           >
             {/* Search */}
@@ -233,9 +234,10 @@ export default function EmpleadosPage() {
         ) : (
           <motion.div
             key="solicitudes"
-            initial={{ opacity: 0, y: 8 }}
+            initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.15 }}
             className="space-y-4"
           >
             {/* Filter */}
