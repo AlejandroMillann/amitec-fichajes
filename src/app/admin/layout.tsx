@@ -111,7 +111,7 @@ function AdminBottomNav() {
       <nav className="bottom-nav fixed bottom-0 left-0 right-0 z-50 lg:hidden">
         <div
           className="flex items-center justify-around px-2 py-1"
-          style={{ paddingBottom: "max(8px, env(safe-area-inset-bottom))" }}
+          style={{ paddingBottom: "max(20px, env(safe-area-inset-bottom))" }}
         >
           {NAV_ITEMS.map((item) => {
             const isActive = pathname === item.href;

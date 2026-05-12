@@ -238,27 +238,34 @@ export function TopBar({ title, subtitle, showNotifications = true, rightElement
             </div>
 
             {/* Push permission banner */}
-            {permission === "default" && (
+            {(permission === "default" || permission === "denied") && (
               <div
-                className="mx-3 my-2 px-3 py-3 rounded-2xl flex items-center gap-3"
-                style={{ background: "var(--primary-light)", border: "1px solid rgba(14,165,233,0.2)" }}
+                className="mx-3 my-2 px-3 py-3 rounded-2xl flex items-start gap-3"
+                style={{
+                  background: permission === "denied" ? "var(--warning-light)" : "var(--primary-light)",
+                  border: `1px solid ${permission === "denied" ? "rgba(245,158,11,0.2)" : "rgba(14,165,233,0.2)"}`,
+                }}
               >
-                <BellOff size={16} style={{ color: "var(--primary)", flexShrink: 0 }} />
+                <BellOff size={16} style={{ color: permission === "denied" ? "var(--warning)" : "var(--primary)", flexShrink: 0, marginTop: 1 }} />
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold" style={{ color: "var(--primary)" }}>
-                    Recibe avisos en tu móvil
+                  <p className="text-xs font-semibold" style={{ color: permission === "denied" ? "var(--warning)" : "var(--primary)" }}>
+                    {permission === "denied" ? "Notificaciones bloqueadas" : "Recibe avisos en tu móvil"}
                   </p>
-                  <p className="text-[10px] mt-0.5" style={{ color: "var(--text-secondary)" }}>
-                    Notificaciones aunque la app esté cerrada
+                  <p className="text-[10px] mt-0.5 leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                    {permission === "denied"
+                      ? "Actívalas en Ajustes del dispositivo → Notificaciones → AMITEC"
+                      : "Notificaciones aunque la app esté cerrada"}
                   </p>
                 </div>
-                <button
-                  onClick={requestPermission}
-                  className="flex-shrink-0 px-3 py-1.5 rounded-xl text-[11px] font-bold text-white"
-                  style={{ background: "var(--primary)" }}
-                >
-                  Activar
-                </button>
+                {permission === "default" && (
+                  <button
+                    onClick={requestPermission}
+                    className="flex-shrink-0 px-3 py-1.5 rounded-xl text-[11px] font-bold text-white mt-0.5"
+                    style={{ background: "var(--primary)" }}
+                  >
+                    Activar
+                  </button>
+                )}
               </div>
             )}
             {permission === "granted" && (
