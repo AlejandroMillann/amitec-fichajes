@@ -181,27 +181,50 @@ function NewRequestModal({ onClose, onSubmit }: NewRequestModalProps) {
               <motion.div key="step2" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }} className="space-y-4">
                 {/* Dates */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-semibold uppercase tracking-wider block mb-1.5"
-                           style={{ color: "var(--text-secondary)" }}>Desde</label>
-                    <input type="date" value={startDate}
-                      onChange={(e) => { setStartDate(e.target.value); if (endDate < e.target.value) setEndDate(e.target.value); }}
-                      className="input-base w-full h-11 rounded-2xl px-3 text-sm" />
+                <div className="rounded-3xl overflow-hidden" style={{ border: "1.5px solid var(--border-strong)" }}>
+                  {/* Desde */}
+                  <div className="px-4 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
+                    <p className="text-[10px] font-bold uppercase tracking-wider mb-1.5"
+                       style={{ color: "var(--text-tertiary)" }}>Fecha de inicio</p>
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => {
+                        setStartDate(e.target.value);
+                        if (endDate < e.target.value) setEndDate(e.target.value);
+                      }}
+                      className="input-base w-full h-11 rounded-2xl px-3 text-base font-semibold"
+                      style={{ color: startDate ? "var(--text-primary)" : "var(--text-tertiary)" }}
+                    />
                   </div>
-                  <div>
-                    <label className="text-xs font-semibold uppercase tracking-wider block mb-1.5"
-                           style={{ color: "var(--text-secondary)" }}>Hasta</label>
-                    <input type="date" value={endDate} min={startDate}
+
+                  {/* Hasta */}
+                  <div className="px-4 py-3.5">
+                    <p className="text-[10px] font-bold uppercase tracking-wider mb-1.5"
+                       style={{ color: "var(--text-tertiary)" }}>Fecha de fin</p>
+                    <input
+                      type="date"
+                      value={endDate}
+                      min={startDate}
                       onChange={(e) => setEndDate(e.target.value)}
-                      className="input-base w-full h-11 rounded-2xl px-3 text-sm" />
+                      className="input-base w-full h-11 rounded-2xl px-3 text-base font-semibold"
+                      style={{ color: endDate ? "var(--text-primary)" : "var(--text-tertiary)" }}
+                    />
                   </div>
+
+                  {/* Resumen días */}
+                  {workingDays > 0 && (
+                    <div className="px-4 py-3 flex items-center justify-between"
+                         style={{ background: `${cfg.color}10`, borderTop: "1px solid var(--border)" }}>
+                      <span className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>
+                        Días laborables
+                      </span>
+                      <span className="text-sm font-extrabold tabular-nums" style={{ color: cfg.color }}>
+                        {workingDays} día{workingDays !== 1 ? "s" : ""}
+                      </span>
+                    </div>
+                  )}
                 </div>
-                {workingDays > 0 && (
-                  <p className="text-xs font-semibold" style={{ color: cfg.color }}>
-                    {workingDays} día{workingDays !== 1 ? "s" : ""} laborable{workingDays !== 1 ? "s" : ""}
-                  </p>
-                )}
 
                 {/* Notes */}
                 <div>
