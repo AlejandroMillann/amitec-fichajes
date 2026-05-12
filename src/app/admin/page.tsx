@@ -9,7 +9,6 @@ import { LIVE_EMPLOYEES, VACATION_REQUESTS, WEEK_CHART_DATA } from "@/lib/mock-d
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
 } from "recharts";
-import { formatHours } from "@/lib/utils";
 import Link from "next/link";
 
 const containerVariants = {

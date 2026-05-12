@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import {
-  Download, FileText, Calendar, Filter,
+  Download, FileText, Calendar,
   TrendingUp, Clock, Users, ChevronDown,
 } from "lucide-react";
-import { ALL_EMPLOYEES, WEEK_CHART_DATA } from "@/lib/mock-data";
+import { ALL_EMPLOYEES } from "@/lib/mock-data";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   LineChart, Line, CartesianGrid, Legend,
@@ -60,7 +60,7 @@ function CustomTooltip({ active, payload, label }: TooltipProps) {
 }
 
 export default function InformesPage() {
-  const [period, setPeriod] = useState("Mayo 2025");
+  const [period] = useState("Mayo 2025");
   const [exportType, setExportType] = useState<"pdf" | "csv" | null>(null);
 
   const handleExport = (type: "pdf" | "csv") => {
@@ -163,7 +163,7 @@ export default function InformesPage() {
             </div>
             <div>
               <p className="text-xl font-extrabold" style={{ color: "var(--text-primary)" }}>{kpi.value}</p>
-              <p className="text-[11px] mt-0.5" style={{ color: "var(--text-tertiary)" }}>{kpi.sub ?? kpi.label}</p>
+              <p className="text-[11px] mt-0.5" style={{ color: "var(--text-tertiary)" }}>{kpi.label}</p>
             </div>
             <div
               className="text-[10px] font-semibold"

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, Square, Pause, RotateCcw } from "lucide-react";
+import { Play, Square, RotateCcw } from "lucide-react";
 import type { FichajeStatus } from "@/lib/types";
 
 interface FichajeButtonProps {

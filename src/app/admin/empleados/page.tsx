@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Filter, UserPlus, CheckCircle2, XCircle, Clock, ChevronRight, Users } from "lucide-react";
+import { Search, UserPlus, CheckCircle2, XCircle, Clock, ChevronRight, Users } from "lucide-react";
 import { ALL_EMPLOYEES, VACATION_REQUESTS } from "@/lib/mock-data";
 import type { Employee } from "@/lib/types";
 import { formatDateShort, getInitials } from "@/lib/utils";
