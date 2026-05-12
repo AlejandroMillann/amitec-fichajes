@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
+import { IOSInstallBanner } from "@/components/IOSInstallBanner";
 
 export const metadata: Metadata = {
   title: "AMITEC Fichajes — Control Horario",
@@ -23,6 +24,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: dark)", color: "#070B14" },
     { media: "(prefers-color-scheme: light)", color: "#F0F4FF" },
@@ -48,6 +50,7 @@ export default function RootLayout({
       <body suppressHydrationWarning>
         <ThemeProvider>{children}</ThemeProvider>
         <ServiceWorkerRegister />
+        <IOSInstallBanner />
       </body>
     </html>
   );
