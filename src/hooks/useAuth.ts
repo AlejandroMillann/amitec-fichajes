@@ -21,6 +21,7 @@ export function useAuth() {
     }
   }, []);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const login = (email: string, _password: string): boolean => {
     // Mock auth — accept any password for demo
     let user: Employee | null = null;

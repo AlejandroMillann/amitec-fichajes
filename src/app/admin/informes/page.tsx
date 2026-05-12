@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   Download, FileText, Calendar,
-  TrendingUp, Clock, Users, ChevronDown,
+  TrendingUp, Clock, Users, ChevronDown, Filter,
 } from "lucide-react";
 import { ALL_EMPLOYEES } from "@/lib/mock-data";
 import {
