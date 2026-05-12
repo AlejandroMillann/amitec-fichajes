@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
@@ -98,51 +98,125 @@ function Sidebar() {
 function AdminBottomNav() {
   const pathname = usePathname();
   const router = useRouter();
+  const { logout } = useAuth();
+  const [confirmLogout, setConfirmLogout] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    router.replace("/login");
+  };
 
   return (
-    <nav className="bottom-nav fixed bottom-0 left-0 right-0 z-50 lg:hidden">
-      <div
-        className="flex items-center justify-around px-2 py-1"
-        style={{ paddingBottom: "max(8px, env(safe-area-inset-bottom))" }}
-      >
-        {NAV_ITEMS.map((item) => {
-          const isActive = pathname === item.href;
-          const Icon = item.icon;
-          return (
-            <motion.button
-              key={item.href}
-              whileTap={{ scale: 0.88 }}
-              onClick={() => router.push(item.href)}
-              className="relative flex flex-col items-center justify-center gap-0.5 px-4 py-2 rounded-2xl min-w-[72px]"
-              style={{ color: isActive ? "var(--primary)" : "var(--text-tertiary)" }}
+    <>
+      <nav className="bottom-nav fixed bottom-0 left-0 right-0 z-50 lg:hidden">
+        <div
+          className="flex items-center justify-around px-2 py-1"
+          style={{ paddingBottom: "max(8px, env(safe-area-inset-bottom))" }}
+        >
+          {NAV_ITEMS.map((item) => {
+            const isActive = pathname === item.href;
+            const Icon = item.icon;
+            return (
+              <motion.button
+                key={item.href}
+                whileTap={{ scale: 0.88 }}
+                onClick={() => router.push(item.href)}
+                className="relative flex flex-col items-center justify-center gap-0.5 px-4 py-2 rounded-2xl min-w-[64px]"
+                style={{ color: isActive ? "var(--primary)" : "var(--text-tertiary)" }}
+              >
+                {isActive && (
+                  <motion.div
+                    layoutId="admin-nav-active"
+                    className="absolute inset-0 rounded-2xl"
+                    style={{ background: "var(--primary-light)" }}
+                    transition={{ type: "spring", stiffness: 400, damping: 35 }}
+                  />
+                )}
+                <div className="relative z-10">
+                  <Icon size={20} strokeWidth={isActive ? 2.5 : 1.8} className="transition-all duration-200" />
+                </div>
+                <span className="text-[10px] font-medium relative z-10" style={{ fontWeight: isActive ? 600 : 500 }}>
+                  {item.label}
+                </span>
+                {isActive && (
+                  <motion.div
+                    layoutId="admin-nav-dot"
+                    className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full z-10"
+                    style={{ background: "var(--primary)" }}
+                    transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                  />
+                )}
+              </motion.button>
+            );
+          })}
+
+          {/* Logout button */}
+          <motion.button
+            whileTap={{ scale: 0.88 }}
+            onClick={() => setConfirmLogout(true)}
+            className="relative flex flex-col items-center justify-center gap-0.5 px-4 py-2 rounded-2xl min-w-[64px]"
+            style={{ color: "var(--danger)" }}
+          >
+            <LogOut size={20} strokeWidth={1.8} />
+            <span className="text-[10px] font-medium">Salir</span>
+          </motion.button>
+        </div>
+      </nav>
+
+      {/* Confirm modal */}
+      <AnimatePresence>
+        {confirmLogout && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-end justify-center p-4 lg:items-center"
+            style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)" }}
+            onClick={() => setConfirmLogout(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 40 }}
+              transition={{ type: "spring", stiffness: 400, damping: 32 }}
+              onClick={(e) => e.stopPropagation()}
+              className="glass rounded-3xl p-6 w-full max-w-sm space-y-4 text-center"
+              style={{ marginBottom: "max(16px, env(safe-area-inset-bottom))" }}
             >
-              {isActive && (
-                <motion.div
-                  layoutId="admin-nav-active"
-                  className="absolute inset-0 rounded-2xl"
-                  style={{ background: "var(--primary-light)" }}
-                  transition={{ type: "spring", stiffness: 400, damping: 35 }}
-                />
-              )}
-              <div className="relative z-10">
-                <Icon size={20} strokeWidth={isActive ? 2.5 : 1.8} className="transition-all duration-200" />
+              <div
+                className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto"
+                style={{ background: "var(--danger-light)" }}
+              >
+                <LogOut size={22} style={{ color: "var(--danger)" }} />
               </div>
-              <span className="text-[10px] font-medium relative z-10" style={{ fontWeight: isActive ? 600 : 500 }}>
-                {item.label}
-              </span>
-              {isActive && (
-                <motion.div
-                  layoutId="admin-nav-dot"
-                  className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full z-10"
-                  style={{ background: "var(--primary)" }}
-                  transition={{ type: "spring", stiffness: 500, damping: 35 }}
-                />
-              )}
-            </motion.button>
-          );
-        })}
-      </div>
-    </nav>
+              <div>
+                <h3 className="text-base font-bold" style={{ color: "var(--text-primary)" }}>
+                  ¿Cerrar sesión?
+                </h3>
+                <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>
+                  Volverás a la pantalla de inicio de sesión
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => setConfirmLogout(false)}
+                  className="btn-secondary h-11 rounded-2xl text-sm font-semibold"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="h-11 rounded-2xl text-sm font-bold text-white"
+                  style={{ background: "linear-gradient(135deg, #EF4444, #DC2626)" }}
+                >
+                  Confirmar
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
 
