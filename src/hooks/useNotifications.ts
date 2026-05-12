@@ -64,7 +64,6 @@ async function fireNativeNotification(title: string, body: string) {
         icon: "/icons/icon-192.png",
         badge: "/icons/icon-192.png",
         tag: "amitec-notif",
-        renotify: true,
       });
       return;
     }
