@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { LIVE_EMPLOYEES, WEEK_CHART_DATA } from "@/lib/mock-data";
 import { useRequests } from "@/hooks/useRequests";
+import { useNotifications } from "@/hooks/useNotifications";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
 } from "recharts";
@@ -49,8 +50,31 @@ function MiniTooltip({ active, payload, label }: TooltipProps) {
 
 export default function AdminDashboardPage() {
   const { requests, approveRequest, rejectRequest } = useRequests();
+  const { addNotification } = useNotifications();
   const pendingRequests = requests.filter((r) => r.status === "pendiente").length;
   const pendingReqs = requests.filter((r) => r.status === "pendiente");
+
+  const handleApprove = (req: (typeof requests)[number]) => {
+    approveRequest(req.id);
+    addNotification({
+      type: "request_approved",
+      title: "Solicitud aprobada",
+      message: `Tu solicitud de ${req.type.replace("_", " ")} (${req.days} día${req.days !== 1 ? "s" : ""}) ha sido aprobada`,
+      forUserId: req.employeeId,
+      requestId: req.id,
+    });
+  };
+
+  const handleReject = (req: (typeof requests)[number]) => {
+    rejectRequest(req.id);
+    addNotification({
+      type: "request_rejected",
+      title: "Solicitud rechazada",
+      message: `Tu solicitud de ${req.type.replace("_", " ")} (${req.days} día${req.days !== 1 ? "s" : ""}) ha sido rechazada`,
+      forUserId: req.employeeId,
+      requestId: req.id,
+    });
+  };
 
   const ADMIN_STATS = [
     { icon: Users, label: "Total empleados", value: LIVE_EMPLOYEES.length, color: "var(--primary)", bg: "var(--primary-light)" },
@@ -207,7 +231,7 @@ export default function AdminDashboardPage() {
                     <div className="flex gap-1.5 flex-shrink-0 mt-0.5">
                       <motion.button
                         whileTap={{ scale: 0.9 }}
-                        onClick={() => approveRequest(req.id)}
+                        onClick={() => handleApprove(req)}
                         className="w-7 h-7 rounded-xl flex items-center justify-center"
                         style={{ background: "var(--success-light)" }}
                       >
@@ -215,7 +239,7 @@ export default function AdminDashboardPage() {
                       </motion.button>
                       <motion.button
                         whileTap={{ scale: 0.9 }}
-                        onClick={() => rejectRequest(req.id)}
+                        onClick={() => handleReject(req)}
                         className="w-7 h-7 rounded-xl flex items-center justify-center"
                         style={{ background: "var(--danger-light)" }}
                       >

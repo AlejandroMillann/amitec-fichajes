@@ -104,6 +104,24 @@ export function useFichaje() {
       sessionStart: Date.now(),
       events: [...prev.events, event],
     }));
+
+    // Capture geolocation in background — does not block fichaje
+    if (typeof window !== "undefined" && "geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setState((prev) => ({
+            ...prev,
+            events: prev.events.map((e) =>
+              e.id === event.id
+                ? { ...e, location: { lat: pos.coords.latitude, lng: pos.coords.longitude } }
+                : e
+            ),
+          }));
+        },
+        () => { /* silently ignore if denied */ },
+        { timeout: 8000, maximumAge: 0 }
+      );
+    }
   }, [addEvent]);
 
   const ficharSalida = useCallback(() => {

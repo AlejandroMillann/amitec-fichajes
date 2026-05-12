@@ -9,7 +9,7 @@ import { useFichaje } from "@/hooks/useFichaje";
 import { useAuth } from "@/hooks/useAuth";
 import { formatTime, formatTimeHHMM, getGreeting } from "@/lib/utils";
 import { RECENT_SESSIONS, WEEK_CHART_DATA } from "@/lib/mock-data";
-import { Coffee, Clock, TrendingUp, ChevronRight, Pause, Play, LogOut } from "lucide-react";
+import { Coffee, Clock, TrendingUp, ChevronRight, Pause, Play, LogOut, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const containerVariants = {
@@ -215,15 +215,25 @@ export default function DashboardPage() {
                       style={{ background: typeConfig.color }}
                     />
                     <div
-                      className="flex-1 flex items-center justify-between px-3 py-2 rounded-xl"
+                      className="flex-1 px-3 py-2 rounded-xl"
                       style={{ background: typeConfig.bg }}
                     >
-                      <span className="text-xs font-medium" style={{ color: typeConfig.color }}>
-                        {typeConfig.label}
-                      </span>
-                      <span className="text-xs font-semibold tabular-nums" style={{ color: typeConfig.color }}>
-                        {formatTimeHHMM(event.timestamp)}
-                      </span>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium" style={{ color: typeConfig.color }}>
+                          {typeConfig.label}
+                        </span>
+                        <span className="text-xs font-semibold tabular-nums" style={{ color: typeConfig.color }}>
+                          {formatTimeHHMM(event.timestamp)}
+                        </span>
+                      </div>
+                      {event.location && (
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <MapPin size={9} style={{ color: typeConfig.color, opacity: 0.7 }} />
+                          <span className="text-[10px] tabular-nums" style={{ color: typeConfig.color, opacity: 0.7 }}>
+                            {event.location.lat.toFixed(4)}, {event.location.lng.toFixed(4)}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </motion.div>
                 );

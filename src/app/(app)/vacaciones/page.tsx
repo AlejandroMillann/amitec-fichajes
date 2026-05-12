@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useRequests } from "@/hooks/useRequests";
 import { useAuth } from "@/hooks/useAuth";
+import { useNotifications } from "@/hooks/useNotifications";
 import type { VacationRequest, RequestType } from "@/lib/types";
 import { formatDateShort, calcWorkingDays } from "@/lib/utils";
 
@@ -325,6 +326,7 @@ function NewRequestModal({ onClose, onSubmit }: NewRequestModalProps) {
 export default function VacacionesPage() {
   const { user } = useAuth();
   const { requests: allRequests, addRequest } = useRequests();
+  const { addNotification } = useNotifications();
   const [showModal, setShowModal] = useState(false);
   const [activeTab, setActiveTab] = useState<"todas" | "pendientes" | "aprobadas">("todas");
 
@@ -359,6 +361,13 @@ export default function VacacionesPage() {
       createdAt: new Date().toISOString(),
     };
     addRequest(newReq);
+    addNotification({
+      type: "new_request",
+      title: "Nueva solicitud pendiente",
+      message: `${newReq.employeeName} ha solicitado ${newReq.type.replace("_", " ")} (${newReq.days} día${newReq.days !== 1 ? "s" : ""}) — pendiente de revisión`,
+      forUserId: "admin-001",
+      requestId: newReq.id,
+    });
   };
 
   return (

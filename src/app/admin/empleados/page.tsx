@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Search, UserPlus, CheckCircle2, XCircle, Clock, ChevronRight, Users } from "lucide-react";
 import { ALL_EMPLOYEES } from "@/lib/mock-data";
 import { useRequests } from "@/hooks/useRequests";
+import { useNotifications } from "@/hooks/useNotifications";
 import type { Employee } from "@/lib/types";
 import { formatDateShort, getInitials } from "@/lib/utils";
 
@@ -113,7 +114,30 @@ export default function EmpleadosPage() {
   const [requestFilter, setRequestFilter] = useState<"todas" | "pendientes">("pendientes");
 
   const { requests, approveRequest, rejectRequest } = useRequests();
+  const { addNotification } = useNotifications();
   const pendingCount = requests.filter((r) => r.status === "pendiente").length;
+
+  const handleApprove = (req: (typeof requests)[number]) => {
+    approveRequest(req.id);
+    addNotification({
+      type: "request_approved",
+      title: "Solicitud aprobada",
+      message: `Tu solicitud de ${req.type.replace("_", " ")} (${req.days} día${req.days !== 1 ? "s" : ""}) ha sido aprobada`,
+      forUserId: req.employeeId,
+      requestId: req.id,
+    });
+  };
+
+  const handleReject = (req: (typeof requests)[number]) => {
+    rejectRequest(req.id);
+    addNotification({
+      type: "request_rejected",
+      title: "Solicitud rechazada",
+      message: `Tu solicitud de ${req.type.replace("_", " ")} (${req.days} día${req.days !== 1 ? "s" : ""}) ha sido rechazada`,
+      forUserId: req.employeeId,
+      requestId: req.id,
+    });
+  };
 
   const filtered = ALL_EMPLOYEES.filter((e) =>
     `${e.name} ${e.lastName} ${e.role} ${e.department}`
@@ -313,7 +337,7 @@ export default function EmpleadosPage() {
                           <div className="flex gap-2 mt-3">
                             <motion.button
                               whileTap={{ scale: 0.95 }}
-                              onClick={() => approveRequest(req.id)}
+                              onClick={() => handleApprove(req)}
                               className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold"
                               style={{ background: "var(--success-light)", color: "var(--success)" }}
                             >
@@ -322,7 +346,7 @@ export default function EmpleadosPage() {
                             </motion.button>
                             <motion.button
                               whileTap={{ scale: 0.95 }}
-                              onClick={() => rejectRequest(req.id)}
+                              onClick={() => handleReject(req)}
                               className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold"
                               style={{ background: "var(--danger-light)", color: "var(--danger)" }}
                             >
