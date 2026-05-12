@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, Cell,
@@ -7,6 +8,7 @@ import {
 import { TopBar } from "@/components/layout/TopBar";
 import { TrendingUp, Clock, Award, CalendarCheck, Zap, Target } from "lucide-react";
 import { WEEK_CHART_DATA, MONTH_STATS } from "@/lib/mock-data";
+import { useFichaje } from "@/hooks/useFichaje";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -40,8 +42,20 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
 }
 
 export default function EstadisticasPage() {
-  const weekTotal = WEEK_CHART_DATA.reduce((s, d) => s + d.hours, 0);
-  const weekTarget = WEEK_CHART_DATA.reduce((s, d) => s + d.target, 0);
+  const { elapsedSeconds } = useFichaje();
+
+  // Inject today's actual worked hours into the chart data
+  const todayIndex = (new Date().getDay() + 6) % 7; // Mon=0, Tue=1, ..., Sun=6
+  const todayHours = parseFloat((elapsedSeconds / 3600).toFixed(1));
+
+  const liveChartData = useMemo(() => {
+    return WEEK_CHART_DATA.map((d, i) =>
+      i === todayIndex ? { ...d, hours: todayHours } : d
+    );
+  }, [todayIndex, todayHours]);
+
+  const weekTotal = liveChartData.reduce((s, d) => s + d.hours, 0);
+  const weekTarget = liveChartData.reduce((s, d) => s + d.target, 0);
   const weekProgress = Math.min((weekTotal / weekTarget) * 100, 100) || 0;
   const overtime = Math.max(weekTotal - weekTarget, 0);
 
@@ -165,7 +179,7 @@ export default function EstadisticasPage() {
           {/* Bar Chart */}
           <div style={{ height: 160 }}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={WEEK_CHART_DATA} barSize={28} margin={{ top: 4, right: 0, left: -20, bottom: 0 }}>
+              <BarChart data={liveChartData} barSize={28} margin={{ top: 4, right: 0, left: -20, bottom: 0 }}>
                 <XAxis
                   dataKey="day"
                   axisLine={false}
@@ -181,7 +195,7 @@ export default function EstadisticasPage() {
                   strokeWidth={1.5}
                 />
                 <Bar dataKey="hours" radius={[6, 6, 4, 4]}>
-                  {WEEK_CHART_DATA.map((entry, index) => (
+                  {liveChartData.map((entry, index) => (
                     <Cell
                       key={index}
                       fill={
@@ -271,9 +285,9 @@ export default function EstadisticasPage() {
           </div>
 
           <div className="space-y-3">
-            {WEEK_CHART_DATA.filter((d) => d.target > 0).map((day, i) => {
+            {liveChartData.filter((d) => d.target > 0).map((day, i) => {
               const pct = day.hours > 0 ? Math.min((day.hours / 8) * 100, 100) : 0;
-              const isToday = i === 0; // Mock: Monday is "today"
+              const isToday = i === todayIndex;
               return (
                 <div key={day.day} className="flex items-center gap-3">
                   <span
@@ -297,7 +311,7 @@ export default function EstadisticasPage() {
                   </div>
                   <span
                     className="text-xs font-bold tabular-nums w-10 text-right flex-shrink-0"
-                    style={{ color: day.hours > 8 ? "var(--success)" : "var(--text-primary)" }}
+                    style={{ color: day.hours > 8 ? "var(--success)" : isToday && day.hours > 0 ? "var(--primary)" : "var(--text-primary)" }}
                   >
                     {day.hours > 0 ? `${day.hours}h` : "—"}
                   </span>

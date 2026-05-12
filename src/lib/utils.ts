@@ -80,3 +80,18 @@ export function getWeekDates(): Date[] {
 export function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
+
+export function calcWorkingDays(startDate: string, endDate: string): number {
+  if (!startDate || !endDate) return 1;
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  if (isNaN(start.getTime()) || isNaN(end.getTime())) return 1;
+  let days = 0;
+  const current = new Date(start);
+  while (current <= end) {
+    const dow = current.getDay();
+    if (dow !== 0 && dow !== 6) days++;
+    current.setDate(current.getDate() + 1);
+  }
+  return Math.max(days, 1);
+}

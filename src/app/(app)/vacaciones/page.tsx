@@ -7,9 +7,10 @@ import {
   CalendarDays, Plus, Clock, CheckCircle2, XCircle, ChevronRight,
   Umbrella, Stethoscope, Timer, X, Loader2, CalendarPlus,
 } from "lucide-react";
-import { VACATION_REQUESTS } from "@/lib/mock-data";
+import { useRequests } from "@/hooks/useRequests";
+import { useAuth } from "@/hooks/useAuth";
 import type { VacationRequest, RequestType } from "@/lib/types";
-import { formatDateShort } from "@/lib/utils";
+import { formatDateShort, calcWorkingDays } from "@/lib/utils";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -149,10 +150,16 @@ function NewRequestModal({ onClose, onSubmit }: NewRequestModalProps) {
                       type="date"
                       value={endDate}
                       onChange={(e) => setEndDate(e.target.value)}
+                      min={startDate}
                       className="input-base w-full h-11 rounded-2xl px-3 text-sm"
                     />
                   </div>
                 </div>
+                {startDate && endDate && (
+                  <p className="text-xs font-medium" style={{ color: "var(--primary)" }}>
+                    {calcWorkingDays(startDate, endDate)} día{calcWorkingDays(startDate, endDate) !== 1 ? "s" : ""} laborable{calcWorkingDays(startDate, endDate) !== 1 ? "s" : ""}
+                  </p>
+                )}
                 <div>
                   <label className="text-xs font-semibold uppercase tracking-wider block mb-1.5" style={{ color: "var(--text-secondary)" }}>
                     Observaciones (opcional)
@@ -205,14 +212,23 @@ function NewRequestModal({ onClose, onSubmit }: NewRequestModalProps) {
 }
 
 export default function VacacionesPage() {
+  const { user } = useAuth();
+  const { requests: allRequests, addRequest } = useRequests();
   const [showModal, setShowModal] = useState(false);
-  const [requests, setRequests] = useState<VacationRequest[]>(VACATION_REQUESTS.filter((r) => r.employeeId === "emp-001"));
   const [activeTab, setActiveTab] = useState<"todas" | "pendientes" | "aprobadas">("todas");
 
-  const vacationBalance = { total: 23, used: 8, pending: 10 };
-  const remaining = vacationBalance.total - vacationBalance.used - vacationBalance.pending;
+  const myRequests = allRequests.filter((r) => r.employeeId === (user?.id ?? "emp-001"));
 
-  const filtered = requests.filter((r) => {
+  const usedDays = myRequests
+    .filter((r) => r.status === "aprobada")
+    .reduce((sum, r) => sum + r.days, 0);
+  const pendingDays = myRequests
+    .filter((r) => r.status === "pendiente")
+    .reduce((sum, r) => sum + r.days, 0);
+  const totalDays = user?.vacationDays ?? 23;
+  const remaining = Math.max(totalDays - usedDays - pendingDays, 0);
+
+  const filtered = myRequests.filter((r) => {
     if (activeTab === "todas") return true;
     if (activeTab === "pendientes") return r.status === "pendiente";
     if (activeTab === "aprobadas") return r.status === "aprobada";
@@ -220,19 +236,21 @@ export default function VacacionesPage() {
   });
 
   const handleNewRequest = (req: Partial<VacationRequest>) => {
+    const start = req.startDate ?? "";
+    const end = req.endDate ?? req.startDate ?? "";
     const newReq: VacationRequest = {
       id: `req-${Date.now()}`,
-      employeeId: "emp-001",
-      employeeName: "Alejandro Millán",
+      employeeId: user?.id ?? "emp-001",
+      employeeName: `${user?.name ?? "Alejandro"} ${user?.lastName ?? "Millán"}`,
       type: req.type ?? "vacaciones",
-      startDate: req.startDate ?? "",
-      endDate: req.endDate ?? req.startDate ?? "",
-      days: 1,
+      startDate: start,
+      endDate: end,
+      days: calcWorkingDays(start, end),
       status: "pendiente",
       notes: req.notes,
       createdAt: new Date().toISOString(),
     };
-    setRequests((prev) => [newReq, ...prev]);
+    addRequest(newReq);
   };
 
   return (
@@ -252,8 +270,8 @@ export default function VacacionesPage() {
           </h3>
           <div className="grid grid-cols-3 gap-3">
             {[
-              { label: "Total", value: vacationBalance.total, color: "var(--text-primary)", sub: "días/año" },
-              { label: "Disfrutados", value: vacationBalance.used, color: "var(--success)", sub: "utilizados" },
+              { label: "Total", value: totalDays, color: "var(--text-primary)", sub: "días/año" },
+              { label: "Disfrutados", value: usedDays, color: "var(--success)", sub: "utilizados" },
               { label: "Disponibles", value: remaining, color: "var(--primary)", sub: "restantes" },
             ].map((item) => (
               <div
@@ -279,20 +297,16 @@ export default function VacacionesPage() {
             <div className="h-2.5 rounded-full overflow-hidden flex" style={{ background: "var(--bg-elevated)" }}>
               <motion.div
                 className="h-full rounded-l-full"
-                style={{ background: "var(--success)", width: `${(vacationBalance.used / vacationBalance.total) * 100}%` }}
+                style={{ background: "var(--success)" }}
                 initial={{ width: 0 }}
-                animate={{ width: `${(vacationBalance.used / vacationBalance.total) * 100}%` }}
+                animate={{ width: `${(usedDays / totalDays) * 100}%` }}
                 transition={{ duration: 0.7, ease: "easeOut" }}
               />
               <motion.div
                 className="h-full"
-                style={{
-                  background: "var(--primary)",
-                  width: `${(vacationBalance.pending / vacationBalance.total) * 100}%`,
-                  opacity: 0.5,
-                }}
+                style={{ background: "var(--primary)", opacity: 0.5 }}
                 initial={{ width: 0 }}
-                animate={{ width: `${(vacationBalance.pending / vacationBalance.total) * 100}%` }}
+                animate={{ width: `${(pendingDays / totalDays) * 100}%` }}
                 transition={{ duration: 0.7, ease: "easeOut", delay: 0.1 }}
               />
             </div>

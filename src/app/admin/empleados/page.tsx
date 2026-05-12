@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, UserPlus, CheckCircle2, XCircle, Clock, ChevronRight, Users } from "lucide-react";
-import { ALL_EMPLOYEES, VACATION_REQUESTS } from "@/lib/mock-data";
+import { ALL_EMPLOYEES } from "@/lib/mock-data";
+import { useRequests } from "@/hooks/useRequests";
 import type { Employee } from "@/lib/types";
 import { formatDateShort, getInitials } from "@/lib/utils";
 
@@ -111,13 +112,16 @@ export default function EmpleadosPage() {
   const [activeTab, setActiveTab] = useState<"empleados" | "solicitudes">("empleados");
   const [requestFilter, setRequestFilter] = useState<"todas" | "pendientes">("pendientes");
 
+  const { requests, approveRequest, rejectRequest } = useRequests();
+  const pendingCount = requests.filter((r) => r.status === "pendiente").length;
+
   const filtered = ALL_EMPLOYEES.filter((e) =>
     `${e.name} ${e.lastName} ${e.role} ${e.department}`
       .toLowerCase()
       .includes(search.toLowerCase())
   );
 
-  const requests = VACATION_REQUESTS.filter((r) =>
+  const visibleRequests = requests.filter((r) =>
     requestFilter === "todas" ? true : r.status === "pendiente"
   );
 
@@ -160,14 +164,14 @@ export default function EmpleadosPage() {
               boxShadow: activeTab === tab ? "var(--card-shadow)" : "none",
             }}
           >
-            {tab === "solicitudes" && VACATION_REQUESTS.filter((r) => r.status === "pendiente").length > 0 ? (
+            {tab === "solicitudes" && pendingCount > 0 ? (
               <span className="flex items-center gap-2">
                 {tab}
                 <span
                   className="w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center"
                   style={{ background: "var(--violet-light)", color: "var(--violet)" }}
                 >
-                  {VACATION_REQUESTS.filter((r) => r.status === "pendiente").length}
+                  {pendingCount}
                 </span>
               </span>
             ) : tab}
@@ -253,7 +257,7 @@ export default function EmpleadosPage() {
             </div>
 
             <div className="space-y-3">
-              {requests.map((req, i) => {
+              {visibleRequests.map((req, i) => {
                 const isPending = req.status === "pendiente";
                 return (
                   <motion.div
@@ -307,6 +311,7 @@ export default function EmpleadosPage() {
                           <div className="flex gap-2 mt-3">
                             <motion.button
                               whileTap={{ scale: 0.95 }}
+                              onClick={() => approveRequest(req.id)}
                               className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold"
                               style={{ background: "var(--success-light)", color: "var(--success)" }}
                             >
@@ -315,6 +320,7 @@ export default function EmpleadosPage() {
                             </motion.button>
                             <motion.button
                               whileTap={{ scale: 0.95 }}
+                              onClick={() => rejectRequest(req.id)}
                               className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold"
                               style={{ background: "var(--danger-light)", color: "var(--danger)" }}
                             >
@@ -335,7 +341,7 @@ export default function EmpleadosPage() {
                 );
               })}
 
-              {requests.length === 0 && (
+              {visibleRequests.length === 0 && (
                 <div className="flex flex-col items-center gap-3 py-16 text-center">
                   <CheckCircle2 size={32} style={{ color: "var(--success)" }} />
                   <p className="text-sm" style={{ color: "var(--text-secondary)" }}>

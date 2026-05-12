@@ -5,7 +5,8 @@ import {
   Users, Clock, TrendingUp, AlertCircle, CheckCircle2, XCircle,
   Activity, Calendar, ChevronRight, Wifi,
 } from "lucide-react";
-import { LIVE_EMPLOYEES, VACATION_REQUESTS, WEEK_CHART_DATA } from "@/lib/mock-data";
+import { LIVE_EMPLOYEES, WEEK_CHART_DATA } from "@/lib/mock-data";
+import { useRequests } from "@/hooks/useRequests";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
 } from "recharts";
@@ -23,14 +24,6 @@ const itemVariants = {
 const workingNow = LIVE_EMPLOYEES.filter((e) => e.status === "working").length;
 const onBreak = LIVE_EMPLOYEES.filter((e) => e.status === "paused").length;
 const absent = LIVE_EMPLOYEES.filter((e) => e.status === "absent").length;
-const pendingRequests = VACATION_REQUESTS.filter((r) => r.status === "pendiente").length;
-
-const ADMIN_STATS = [
-  { icon: Users, label: "Total empleados", value: LIVE_EMPLOYEES.length, color: "var(--primary)", bg: "var(--primary-light)" },
-  { icon: Activity, label: "Trabajando ahora", value: workingNow, color: "var(--success)", bg: "var(--success-light)" },
-  { icon: Clock, label: "En pausa", value: onBreak, color: "var(--warning)", bg: "var(--warning-light)" },
-  { icon: AlertCircle, label: "Solicitudes", value: pendingRequests, color: "var(--violet)", bg: "var(--violet-light)" },
-];
 
 const STATUS_STYLE = {
   working: { label: "Activo", color: "var(--success)", dot: "#10B981" },
@@ -55,7 +48,16 @@ function MiniTooltip({ active, payload, label }: TooltipProps) {
 }
 
 export default function AdminDashboardPage() {
-  const pendingReqs = VACATION_REQUESTS.filter((r) => r.status === "pendiente");
+  const { requests, approveRequest, rejectRequest } = useRequests();
+  const pendingRequests = requests.filter((r) => r.status === "pendiente").length;
+  const pendingReqs = requests.filter((r) => r.status === "pendiente");
+
+  const ADMIN_STATS = [
+    { icon: Users, label: "Total empleados", value: LIVE_EMPLOYEES.length, color: "var(--primary)", bg: "var(--primary-light)" },
+    { icon: Activity, label: "Trabajando ahora", value: workingNow, color: "var(--success)", bg: "var(--success-light)" },
+    { icon: Clock, label: "En pausa", value: onBreak, color: "var(--warning)", bg: "var(--warning-light)" },
+    { icon: AlertCircle, label: "Solicitudes", value: pendingRequests, color: "var(--violet)", bg: "var(--violet-light)" },
+  ];
 
   return (
     <motion.div
@@ -203,22 +205,34 @@ export default function AdminDashboardPage() {
                       </p>
                     </div>
                     <div className="flex gap-1.5 flex-shrink-0 mt-0.5">
-                      <button
+                      <motion.button
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => approveRequest(req.id)}
                         className="w-7 h-7 rounded-xl flex items-center justify-center"
                         style={{ background: "var(--success-light)" }}
                       >
                         <CheckCircle2 size={13} style={{ color: "var(--success)" }} />
-                      </button>
-                      <button
+                      </motion.button>
+                      <motion.button
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => rejectRequest(req.id)}
                         className="w-7 h-7 rounded-xl flex items-center justify-center"
                         style={{ background: "var(--danger-light)" }}
                       >
                         <XCircle size={13} style={{ color: "var(--danger)" }} />
-                      </button>
+                      </motion.button>
                     </div>
                   </div>
                 </motion.div>
               ))}
+
+              {pendingReqs.length === 0 && (
+                <div className="flex flex-col items-center gap-2 py-6 text-center">
+                  <CheckCircle2 size={24} style={{ color: "var(--success)" }} />
+                  <p className="text-xs" style={{ color: "var(--text-secondary)" }}>Todo al día</p>
+                </div>
+              )}
+
               <Link href="/admin/empleados">
                 <div className="flex items-center justify-center py-2 text-xs font-medium gap-1" style={{ color: "var(--primary)" }}>
                   Ver todas <ChevronRight size={12} />
