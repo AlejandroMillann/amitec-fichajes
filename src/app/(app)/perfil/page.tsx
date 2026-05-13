@@ -2,15 +2,17 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { TopBar } from "@/components/layout/TopBar";
 import { useAuth } from "@/hooks/useAuth";
 import {
   User, Mail, Phone, Building2, Calendar, LogOut,
-  ChevronRight, Shield, Bell, Moon, HelpCircle, Lock,
+  ChevronRight, Shield, Bell, Moon, HelpCircle, Lock, Globe,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { getInitials, formatDateShort } from "@/lib/utils";
+import { useLocale } from "@/providers/LocaleProvider";
+import { LOCALE_LABELS, LOCALE_FLAGS, type Locale } from "@/lib/translations";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -43,9 +45,36 @@ function AvatarCircle({ name, lastName }: { name: string; lastName: string }) {
   );
 }
 
+function LanguageSelector() {
+  const { locale, setLocale } = useLocale();
+  const locales: Locale[] = ["es", "en", "fr"];
+
+  return (
+    <div className="flex gap-2">
+      {locales.map((l) => (
+        <motion.button
+          key={l}
+          whileTap={{ scale: 0.92 }}
+          onClick={() => setLocale(l)}
+          className="flex-1 flex flex-col items-center gap-1 py-2 rounded-xl text-xs font-semibold transition-all"
+          style={{
+            background: locale === l ? "var(--primary-light)" : "var(--bg-elevated)",
+            color: locale === l ? "var(--primary)" : "var(--text-secondary)",
+            border: locale === l ? "1.5px solid rgba(14,165,233,0.3)" : "1.5px solid transparent",
+          }}
+        >
+          <span className="text-base">{LOCALE_FLAGS[l]}</span>
+          <span>{LOCALE_LABELS[l]}</span>
+        </motion.button>
+      ))}
+    </div>
+  );
+}
+
 export default function PerfilPage() {
   const { user, logout } = useAuth();
   const router = useRouter();
+  const { tr } = useLocale();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   if (!user) return null;
@@ -57,34 +86,34 @@ export default function PerfilPage() {
 
   const menuSections = [
     {
-      title: "Cuenta",
+      title: tr.profile.sectionAccount,
       items: [
-        { icon: User, label: "Datos personales", sub: "Nombre, teléfono, contacto" },
-        { icon: Lock, label: "Cambiar contraseña", sub: "Actualiza tu acceso" },
-        { icon: Bell, label: "Notificaciones", sub: "Alertas y recordatorios" },
+        { icon: User, label: tr.profile.personalData, sub: tr.profile.personalDataSub },
+        { icon: Lock, label: tr.profile.changePassword, sub: tr.profile.changePasswordSub },
+        { icon: Bell, label: tr.profile.notifications, sub: tr.profile.notificationsSub },
       ],
     },
     {
-      title: "Preferencias",
+      title: tr.profile.sectionPrefs,
       items: [
         {
-          icon: Moon, label: "Apariencia", sub: "Modo oscuro / claro",
+          icon: Moon, label: tr.profile.appearance, sub: tr.profile.appearanceSub,
           rightElement: <ThemeToggle />,
         },
-        { icon: Shield, label: "Privacidad", sub: "Geolocalización y permisos" },
+        { icon: Shield, label: tr.profile.privacy, sub: tr.profile.privacySub },
       ],
     },
     {
-      title: "Soporte",
+      title: tr.profile.sectionSupport,
       items: [
-        { icon: HelpCircle, label: "Ayuda y soporte", sub: "FAQs y contacto" },
+        { icon: HelpCircle, label: tr.profile.help, sub: tr.profile.helpSub },
       ],
     },
   ];
 
   return (
     <div className="flex flex-col min-h-full">
-      <TopBar title="Mi Perfil" showNotifications={false} />
+      <TopBar title={tr.profile.title} showNotifications={false} />
 
       <motion.div
         variants={containerVariants}
@@ -111,7 +140,7 @@ export default function PerfilPage() {
                 }}
               >
                 <Shield size={10} />
-                {user.isAdmin ? "Administrador" : "Empleado"}
+                {user.isAdmin ? tr.profile.admin : tr.profile.employee}
               </div>
             </div>
           </div>
@@ -121,7 +150,7 @@ export default function PerfilPage() {
             {[
               { icon: Mail, label: user.email },
               { icon: Building2, label: `${user.department} · ${user.weeklyHours}h/semana` },
-              { icon: Calendar, label: `Desde ${formatDateShort(user.joinDate)}` },
+              { icon: Calendar, label: `${tr.profile.joinDate} ${formatDateShort(user.joinDate)}` },
               ...(user.phone ? [{ icon: Phone, label: user.phone }] : []),
             ].map((info, i) => (
               <div key={i} className="flex items-center gap-3 px-3 py-2.5 rounded-2xl"
@@ -139,10 +168,10 @@ export default function PerfilPage() {
         <motion.div variants={itemVariants} className="glass rounded-2xl p-4">
           <div className="flex items-center justify-between">
             <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
-              Vacaciones 2025
+              {tr.profile.vacationYear}
             </p>
             <span className="text-xs" style={{ color: "var(--text-tertiary)" }}>
-              {user.vacationDays - user.vacationUsed} días disponibles
+              {user.vacationDays - user.vacationUsed} {tr.profile.daysAvailable}
             </span>
           </div>
           <div className="mt-3 h-2 rounded-full overflow-hidden" style={{ background: "var(--bg-elevated)" }}>
@@ -159,11 +188,26 @@ export default function PerfilPage() {
           </div>
           <div className="flex justify-between mt-1.5">
             <span className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>
-              {user.vacationUsed} usados
+              {user.vacationUsed} {tr.profile.daysUsed}
             </span>
             <span className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>
-              {user.vacationDays} total
+              {user.vacationDays} {tr.profile.daysTotal}
             </span>
+          </div>
+        </motion.div>
+
+        {/* Language selector */}
+        <motion.div variants={itemVariants} className="glass rounded-2xl overflow-hidden">
+          <div className="px-4 py-3" style={{ borderBottom: "1px solid var(--border)" }}>
+            <div className="flex items-center gap-2">
+              <Globe size={14} style={{ color: "var(--text-tertiary)" }} />
+              <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--text-tertiary)" }}>
+                {tr.profile.sectionLanguage}
+              </p>
+            </div>
+          </div>
+          <div className="p-3">
+            <LanguageSelector />
           </div>
         </motion.div>
 
@@ -221,65 +265,68 @@ export default function PerfilPage() {
             }}
           >
             <LogOut size={16} />
-            Cerrar sesión
+            {tr.profile.logout}
           </motion.button>
         </motion.div>
 
         <motion.div variants={itemVariants} className="text-center pb-2">
           <p className="text-[11px]" style={{ color: "var(--text-tertiary)" }}>
-            AMITEC Fichajes v2.0 · © 2025 AMITEC
+            {tr.profile.footer}
           </p>
         </motion.div>
       </motion.div>
 
       {/* Logout confirm modal */}
-      {showLogoutConfirm && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-6"
-          style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)" }}
-          onClick={() => setShowLogoutConfirm(false)}
-        >
+      <AnimatePresence>
+        {showLogoutConfirm && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.93 }}
-            animate={{ opacity: 1, scale: 1 }}
-            onClick={(e) => e.stopPropagation()}
-            className="glass rounded-3xl p-7 w-full max-w-sm space-y-5 text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-6"
+            style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)" }}
+            onClick={() => setShowLogoutConfirm(false)}
           >
-            <div
-              className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto"
-              style={{ background: "var(--danger-light)" }}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.93 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.93 }}
+              onClick={(e) => e.stopPropagation()}
+              className="glass rounded-3xl p-7 w-full max-w-sm space-y-5 text-center"
             >
-              <LogOut size={24} style={{ color: "var(--danger)" }} />
-            </div>
-            <div>
-              <h3 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>
-                ¿Cerrar sesión?
-              </h3>
-              <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>
-                Se cerrará tu sesión actual
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={() => setShowLogoutConfirm(false)}
-                className="btn-secondary h-12 rounded-2xl text-sm font-semibold"
+              <div
+                className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto"
+                style={{ background: "var(--danger-light)" }}
               >
-                Cancelar
-              </button>
-              <button
-                onClick={handleLogout}
-                className="h-12 rounded-2xl text-sm font-bold text-white"
-                style={{ background: "linear-gradient(135deg, #EF4444, #DC2626)" }}
-              >
-                Confirmar
-              </button>
-            </div>
+                <LogOut size={24} style={{ color: "var(--danger)" }} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>
+                  {tr.profile.logoutTitle}
+                </h3>
+                <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>
+                  {tr.profile.logoutBody}
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => setShowLogoutConfirm(false)}
+                  className="btn-secondary h-12 rounded-2xl text-sm font-semibold"
+                >
+                  {tr.common.cancel}
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="h-12 rounded-2xl text-sm font-bold text-white"
+                  style={{ background: "linear-gradient(135deg, #EF4444, #DC2626)" }}
+                >
+                  {tr.common.confirm}
+                </button>
+              </div>
+            </motion.div>
           </motion.div>
-        </motion.div>
-      )}
+        )}
+      </AnimatePresence>
     </div>
   );
 }

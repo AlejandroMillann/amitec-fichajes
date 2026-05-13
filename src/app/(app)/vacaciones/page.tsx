@@ -11,6 +11,7 @@ import {
 import { useRequests } from "@/hooks/useRequests";
 import { useAuth } from "@/hooks/useAuth";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useLocale } from "@/providers/LocaleProvider";
 import type { VacationRequest, RequestType } from "@/lib/types";
 import { formatDateShort, calcWorkingDays } from "@/lib/utils";
 
@@ -23,17 +24,17 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { duration: 0.2, ease: [0.16, 1, 0.3, 1] } },
 };
 
-const TYPE_CONFIG: Record<RequestType, { label: string; icon: React.ElementType; color: string; bg: string; requiresDoc: boolean }> = {
-  vacaciones: { label: "Vacaciones", icon: Umbrella, color: "var(--primary)", bg: "var(--primary-light)", requiresDoc: false },
-  permiso: { label: "Permiso", icon: CalendarDays, color: "var(--cyan)", bg: "var(--cyan-light)", requiresDoc: true },
-  ausencia_horas: { label: "Ausencia horas", icon: Timer, color: "var(--warning)", bg: "var(--warning-light)", requiresDoc: true },
-  baja_medica: { label: "Baja médica", icon: Stethoscope, color: "var(--violet)", bg: "var(--violet-light)", requiresDoc: true },
+const TYPE_VISUAL: Record<RequestType, { icon: React.ElementType; color: string; bg: string; requiresDoc: boolean }> = {
+  vacaciones: { icon: Umbrella, color: "var(--primary)", bg: "var(--primary-light)", requiresDoc: false },
+  permiso: { icon: CalendarDays, color: "var(--cyan)", bg: "var(--cyan-light)", requiresDoc: true },
+  ausencia_horas: { icon: Timer, color: "var(--warning)", bg: "var(--warning-light)", requiresDoc: true },
+  baja_medica: { icon: Stethoscope, color: "var(--violet)", bg: "var(--violet-light)", requiresDoc: true },
 };
 
-const STATUS_CONFIG = {
-  pendiente: { label: "Pendiente", icon: Clock, color: "var(--warning)", bg: "var(--warning-light)" },
-  aprobada: { label: "Aprobada", icon: CheckCircle2, color: "var(--success)", bg: "var(--success-light)" },
-  rechazada: { label: "Rechazada", icon: XCircle, color: "var(--danger)", bg: "var(--danger-light)" },
+const STATUS_VISUAL = {
+  pendiente: { icon: Clock, color: "var(--warning)", bg: "var(--warning-light)" },
+  aprobada: { icon: CheckCircle2, color: "var(--success)", bg: "var(--success-light)" },
+  rechazada: { icon: XCircle, color: "var(--danger)", bg: "var(--danger-light)" },
 };
 
 interface AttachmentData {
@@ -48,6 +49,7 @@ interface NewRequestModalProps {
 }
 
 function NewRequestModal({ onClose, onSubmit }: NewRequestModalProps) {
+  const { tr } = useLocale();
   const [type, setType] = useState<RequestType>("vacaciones");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -58,7 +60,7 @@ function NewRequestModal({ onClose, onSubmit }: NewRequestModalProps) {
   const [step, setStep] = useState<1 | 2>(1);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const cfg = TYPE_CONFIG[type];
+  const cfg = TYPE_VISUAL[type];
   const workingDays = startDate && endDate ? calcWorkingDays(startDate, endDate) : 0;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -74,7 +76,6 @@ function NewRequestModal({ onClose, onSubmit }: NewRequestModalProps) {
       setAttachment({ data: ev.target?.result as string, name: file.name, mimeType: file.type });
     };
     reader.readAsDataURL(file);
-    // Reset input so the same file can be re-selected after removing
     e.target.value = "";
   };
 
@@ -122,8 +123,10 @@ function NewRequestModal({ onClose, onSubmit }: NewRequestModalProps) {
               <CalendarPlus size={16} className="text-white" />
             </div>
             <div>
-              <h3 className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>Nueva solicitud</h3>
-              <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>Paso {step} de 2</p>
+              <h3 className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>{tr.vacations.newRequest}</h3>
+              <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
+                {tr.vacations.step.replace("{n}", String(step))}
+              </p>
             </div>
           </div>
           <button onClick={onClose} className="w-8 h-8 rounded-xl flex items-center justify-center surface-hover">
@@ -139,11 +142,11 @@ function NewRequestModal({ onClose, onSubmit }: NewRequestModalProps) {
                           exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.15 }}>
                 <p className="text-xs font-semibold uppercase tracking-wider mb-3"
                    style={{ color: "var(--text-secondary)" }}>
-                  Tipo de solicitud
+                  {tr.vacations.requestType}
                 </p>
                 <div className="space-y-2">
                   {typeOptions.map((t) => {
-                    const c = TYPE_CONFIG[t];
+                    const c = TYPE_VISUAL[t];
                     const Icon = c.icon;
                     const isSelected = type === t;
                     return (
@@ -163,11 +166,11 @@ function NewRequestModal({ onClose, onSubmit }: NewRequestModalProps) {
                         </div>
                         <div className="flex-1 text-left">
                           <span className="text-sm font-medium" style={{ color: isSelected ? c.color : "var(--text-primary)" }}>
-                            {c.label}
+                            {tr.requestTypes[t]}
                           </span>
                           {c.requiresDoc && (
                             <p className="text-[10px] mt-0.5" style={{ color: "var(--text-tertiary)" }}>
-                              Permite adjuntar documento
+                              {tr.vacations.allowsDoc}
                             </p>
                           )}
                         </div>
@@ -185,7 +188,7 @@ function NewRequestModal({ onClose, onSubmit }: NewRequestModalProps) {
                   {/* Desde */}
                   <div className="px-4 py-3.5" style={{ borderBottom: "1px solid var(--border)" }}>
                     <p className="text-[10px] font-bold uppercase tracking-wider mb-1.5"
-                       style={{ color: "var(--text-tertiary)" }}>Fecha de inicio</p>
+                       style={{ color: "var(--text-tertiary)" }}>{tr.vacations.startDate}</p>
                     <input
                       type="date"
                       value={startDate}
@@ -201,7 +204,7 @@ function NewRequestModal({ onClose, onSubmit }: NewRequestModalProps) {
                   {/* Hasta */}
                   <div className="px-4 py-3.5">
                     <p className="text-[10px] font-bold uppercase tracking-wider mb-1.5"
-                       style={{ color: "var(--text-tertiary)" }}>Fecha de fin</p>
+                       style={{ color: "var(--text-tertiary)" }}>{tr.vacations.endDate}</p>
                     <input
                       type="date"
                       value={endDate}
@@ -217,10 +220,10 @@ function NewRequestModal({ onClose, onSubmit }: NewRequestModalProps) {
                     <div className="px-4 py-3 flex items-center justify-between"
                          style={{ background: `${cfg.color}10`, borderTop: "1px solid var(--border)" }}>
                       <span className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>
-                        Días laborables
+                        {tr.vacations.workingDays}
                       </span>
                       <span className="text-sm font-extrabold tabular-nums" style={{ color: cfg.color }}>
-                        {workingDays} día{workingDays !== 1 ? "s" : ""}
+                        {workingDays} {workingDays !== 1 ? tr.vacations.days : tr.vacations.day}
                       </span>
                     </div>
                   )}
@@ -229,20 +232,20 @@ function NewRequestModal({ onClose, onSubmit }: NewRequestModalProps) {
                 {/* Notes */}
                 <div>
                   <label className="text-xs font-semibold uppercase tracking-wider block mb-1.5"
-                         style={{ color: "var(--text-secondary)" }}>Observaciones (opcional)</label>
+                         style={{ color: "var(--text-secondary)" }}>{tr.vacations.notes}</label>
                   <textarea value={notes} onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Añade detalles..." rows={2}
+                    placeholder={tr.vacations.notesPlaceholder} rows={2}
                     className="input-base w-full rounded-2xl p-3 text-sm resize-none" />
                 </div>
 
-                {/* File attachment — only for types that require justification */}
+                {/* File attachment */}
                 {cfg.requiresDoc && (
                   <div>
                     <label className="text-xs font-semibold uppercase tracking-wider block mb-1.5"
                            style={{ color: "var(--text-secondary)" }}>
-                      Documento justificativo
+                      {tr.vacations.document}
                       <span className="ml-1 font-normal normal-case" style={{ color: "var(--text-tertiary)" }}>
-                        (opcional)
+                        {tr.vacations.optional}
                       </span>
                     </label>
 
@@ -257,7 +260,6 @@ function NewRequestModal({ onClose, onSubmit }: NewRequestModalProps) {
                     {attachment ? (
                       <div className="rounded-2xl overflow-hidden"
                            style={{ border: "1px solid var(--border)" }}>
-                        {/* Preview */}
                         {attachment.mimeType.startsWith("image/") ? (
                           <div className="relative">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -287,7 +289,7 @@ function NewRequestModal({ onClose, onSubmit }: NewRequestModalProps) {
                             className="flex-1 text-xs font-medium flex items-center justify-center gap-1.5 py-1.5 rounded-xl surface-hover"
                             style={{ color: "var(--danger)" }}
                           >
-                            <X size={12} /> Eliminar
+                            <X size={12} /> {tr.common.delete}
                           </button>
                         </div>
                       </div>
@@ -300,10 +302,10 @@ function NewRequestModal({ onClose, onSubmit }: NewRequestModalProps) {
                       >
                         <Paperclip size={18} style={{ color: "var(--text-tertiary)" }} />
                         <p className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>
-                          Foto o PDF
+                          {tr.vacations.photoOrPdf}
                         </p>
                         <p className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>
-                          máx. 2 MB
+                          {tr.vacations.maxSize}
                         </p>
                       </motion.button>
                     )}
@@ -326,18 +328,18 @@ function NewRequestModal({ onClose, onSubmit }: NewRequestModalProps) {
           {step === 2 && (
             <motion.button whileTap={{ scale: 0.96 }} onClick={() => setStep(1)}
               className="btn-secondary flex-1 h-12 rounded-2xl text-sm font-semibold">
-              Atrás
+              {tr.common.back}
             </motion.button>
           )}
           {step === 1 ? (
             <motion.button whileTap={{ scale: 0.96 }} onClick={() => setStep(2)}
               className="btn-primary flex-1 h-12 rounded-2xl text-sm font-bold flex items-center justify-center gap-2">
-              Siguiente <ChevronRight size={15} />
+              {tr.common.next} <ChevronRight size={15} />
             </motion.button>
           ) : (
             <motion.button whileTap={{ scale: 0.96 }} disabled={!startDate || loading} onClick={handleSubmit}
               className="btn-primary flex-1 h-12 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-60">
-              {loading ? <Loader2 size={16} className="animate-spin text-white" /> : "Enviar solicitud"}
+              {loading ? <Loader2 size={16} className="animate-spin text-white" /> : tr.vacations.sendRequest}
             </motion.button>
           )}
         </div>
@@ -348,6 +350,7 @@ function NewRequestModal({ onClose, onSubmit }: NewRequestModalProps) {
 
 export default function VacacionesPage() {
   const { user } = useAuth();
+  const { tr } = useLocale();
   const { requests: allRequests, addRequest } = useRequests();
   const { addNotification } = useNotifications();
   const [showModal, setShowModal] = useState(false);
@@ -386,16 +389,22 @@ export default function VacacionesPage() {
     addRequest(newReq);
     addNotification({
       type: "new_request",
-      title: "Nueva solicitud pendiente",
-      message: `${newReq.employeeName} ha solicitado ${newReq.type.replace("_", " ")} (${newReq.days} día${newReq.days !== 1 ? "s" : ""}) — pendiente de revisión`,
+      title: tr.notifications.newRequestTitle,
+      message: `${newReq.employeeName} — ${tr.requestTypes[newReq.type]} (${newReq.days} ${newReq.days !== 1 ? tr.vacations.days : tr.vacations.day})`,
       forUserId: "admin-001",
       requestId: newReq.id,
     });
   };
 
+  const TAB_LABELS = {
+    todas: tr.common.all,
+    pendientes: tr.vacations.pendingTab,
+    aprobadas: tr.vacations.approvedTab,
+  };
+
   return (
     <div className="flex flex-col min-h-full">
-      <TopBar title="Vacaciones" showNotifications={false} />
+      <TopBar title={tr.vacations.title} showNotifications={false} />
 
       <motion.div variants={containerVariants} initial="hidden" animate="show"
         className="flex-1 px-4 pb-8 space-y-5 max-w-lg mx-auto w-full pt-4">
@@ -403,19 +412,18 @@ export default function VacacionesPage() {
         {/* Balance */}
         <motion.div variants={itemVariants} className="glass rounded-3xl p-5">
           <h3 className="text-sm font-bold mb-4" style={{ color: "var(--text-secondary)" }}>
-            Saldo de vacaciones 2025
+            {tr.vacations.year}
           </h3>
           <div className="grid grid-cols-3 gap-3">
             {[
-              { label: "Total", value: totalDays, color: "var(--text-primary)", sub: "días/año" },
-              { label: "Disfrutados", value: usedDays, color: "var(--success)", sub: "utilizados" },
-              { label: "Disponibles", value: remaining, color: "var(--primary)", sub: "restantes" },
+              { label: tr.common.all, value: totalDays, color: "var(--text-primary)", sub: tr.vacations.daysTotal },
+              { label: tr.vacations.daysUsed, value: usedDays, color: "var(--success)", sub: tr.vacations.daysUsed },
+              { label: tr.vacations.daysAvailable, value: remaining, color: "var(--primary)", sub: tr.vacations.daysAvailable },
             ].map((item) => (
-              <div key={item.label} className="rounded-2xl p-3 text-center"
+              <div key={item.sub} className="rounded-2xl p-3 text-center"
                    style={{ background: "var(--bg-elevated)" }}>
                 <p className="text-2xl font-extrabold" style={{ color: item.color }}>{item.value}</p>
                 <p className="text-[10px] mt-0.5 font-medium" style={{ color: "var(--text-tertiary)" }}>{item.sub}</p>
-                <p className="text-[10px] mt-1 font-semibold" style={{ color: "var(--text-secondary)" }}>{item.label}</p>
               </div>
             ))}
           </div>
@@ -431,7 +439,9 @@ export default function VacacionesPage() {
                 transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }} />
             </div>
             <div className="flex justify-between text-[10px]" style={{ color: "var(--text-tertiary)" }}>
-              <span>Usados</span><span>Pendientes</span><span>Disponibles</span>
+              <span>{tr.vacations.daysUsed}</span>
+              <span>{tr.vacations.daysPending}</span>
+              <span>{tr.vacations.daysAvailable}</span>
             </div>
           </div>
         </motion.div>
@@ -440,7 +450,7 @@ export default function VacacionesPage() {
         <motion.button variants={itemVariants} whileTap={{ scale: 0.97 }} onClick={() => setShowModal(true)}
           className="btn-primary w-full rounded-2xl flex items-center justify-center gap-2 font-semibold text-sm"
           style={{ height: 52 }}>
-          <Plus size={18} /> Nueva solicitud
+          <Plus size={18} /> {tr.vacations.newRequest}
         </motion.button>
 
         {/* Tabs */}
@@ -448,13 +458,13 @@ export default function VacacionesPage() {
           style={{ background: "var(--bg-elevated)" }}>
           {(["todas", "pendientes", "aprobadas"] as const).map((tab) => (
             <button key={tab} onClick={() => setActiveTab(tab)}
-              className="flex-1 py-2 rounded-xl text-xs font-semibold transition-all duration-150 capitalize"
+              className="flex-1 py-2 rounded-xl text-xs font-semibold transition-all duration-150"
               style={{
                 background: activeTab === tab ? "var(--bg-surface)" : "transparent",
                 color: activeTab === tab ? "var(--primary)" : "var(--text-tertiary)",
                 boxShadow: activeTab === tab ? "var(--card-shadow)" : "none",
               }}>
-              {tab}
+              {TAB_LABELS[tab]}
             </button>
           ))}
         </motion.div>
@@ -463,8 +473,8 @@ export default function VacacionesPage() {
         <motion.div variants={itemVariants} className="space-y-3">
           <AnimatePresence mode="popLayout">
             {filtered.map((req) => {
-              const typeCfg = TYPE_CONFIG[req.type];
-              const statusCfg = STATUS_CONFIG[req.status];
+              const typeCfg = TYPE_VISUAL[req.type];
+              const statusCfg = STATUS_VISUAL[req.status];
               const TypeIcon = typeCfg.icon;
               const StatusIcon = statusCfg.icon;
 
@@ -483,11 +493,11 @@ export default function VacacionesPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
                         <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
-                          {typeCfg.label}
+                          {tr.requestTypes[req.type]}
                         </p>
                         <div className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold flex-shrink-0"
                              style={{ background: statusCfg.bg, color: statusCfg.color }}>
-                          <StatusIcon size={10} /> {statusCfg.label}
+                          <StatusIcon size={10} /> {tr.status[req.status === "pendiente" ? "pending" : req.status === "aprobada" ? "approved" : "rejected"]}
                         </div>
                       </div>
                       <p className="text-xs mt-1" style={{ color: "var(--text-secondary)" }}>
@@ -501,7 +511,7 @@ export default function VacacionesPage() {
                       )}
                       <div className="flex items-center justify-between mt-2">
                         <span className="text-[10px] font-medium" style={{ color: "var(--text-tertiary)" }}>
-                          {req.days} día{req.days !== 1 ? "s" : ""}
+                          {req.days} {req.days !== 1 ? tr.vacations.days : tr.vacations.day}
                         </span>
                         <div className="flex items-center gap-2">
                           {req.attachmentName && (
@@ -529,9 +539,9 @@ export default function VacacionesPage() {
                    style={{ background: "var(--bg-elevated)" }}>
                 <CalendarDays size={24} style={{ color: "var(--text-tertiary)" }} />
               </div>
-              <p className="text-sm" style={{ color: "var(--text-secondary)" }}>No hay solicitudes</p>
+              <p className="text-sm" style={{ color: "var(--text-secondary)" }}>{tr.vacations.noRequests}</p>
               <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
-                Crea una nueva solicitud con el botón de arriba
+                {tr.vacations.noPending}
               </p>
             </motion.div>
           )}

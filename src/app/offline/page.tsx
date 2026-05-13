@@ -1,6 +1,9 @@
 "use client";
 
+import { useLocale } from "@/providers/LocaleProvider";
+
 export default function OfflinePage() {
+  const { tr } = useLocale();
   return (
     <div
       style={{
@@ -34,10 +37,10 @@ export default function OfflinePage() {
       </div>
       <div>
         <h1 style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)", marginBottom: 8 }}>
-          Sin conexión
+          {tr.offline.title}
         </h1>
         <p style={{ fontSize: 14, color: "var(--text-secondary)", maxWidth: 280 }}>
-          Parece que no tienes conexión a internet. Los datos que ya cargaste siguen disponibles.
+          {tr.offline.body}
         </p>
       </div>
       <button
@@ -54,7 +57,7 @@ export default function OfflinePage() {
           cursor: "pointer",
         }}
       >
-        Reintentar
+        {tr.offline.retry}
       </button>
     </div>
   );

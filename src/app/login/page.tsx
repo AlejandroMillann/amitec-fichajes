@@ -6,10 +6,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { useLocale } from "@/providers/LocaleProvider";
 
 export default function LoginPage() {
   const router = useRouter();
   const { login, user, isLoading } = useAuth();
+  const { tr } = useLocale();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -24,18 +26,18 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) { setError("Introduce tu email"); return; }
-    if (!password) { setError("Introduce tu contraseña"); return; }
+    if (!email) { setError(tr.login.errorEmail); return; }
+    if (!password) { setError(tr.login.errorPassword); return; }
     setError("");
     setLoading(true);
 
-    await new Promise((r) => setTimeout(r, 900)); // Simulate API call
+    await new Promise((r) => setTimeout(r, 900));
     const success = login(email, password);
 
     if (success) {
       router.push("/dashboard");
     } else {
-      setError("Email o contraseña incorrectos");
+      setError(tr.login.errorInvalid);
       setLoading(false);
     }
   };
@@ -106,7 +108,7 @@ export default function LoginPage() {
             >
               <div className="w-1.5 h-1.5 rounded-full bg-primary-400 animate-pulse" />
               <span className="text-xs font-medium" style={{ color: "var(--primary)" }}>
-                Control Horario Empresarial
+                {tr.login.badge}
               </span>
             </motion.div>
 
@@ -114,12 +116,12 @@ export default function LoginPage() {
               className="text-3xl font-extrabold tracking-tight mb-3"
               style={{ color: "var(--text-primary)" }}
             >
-              Bienvenido
+              {tr.login.welcome}
             </h1>
             <p className="text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-              Accede a tu cuenta para gestionar
-              <br />
-              tu jornada laboral
+              {tr.login.subtitle.split("\n").map((line, i) => (
+                <span key={i}>{line}{i === 0 && <br />}</span>
+              ))}
             </p>
           </div>
 
@@ -132,7 +134,7 @@ export default function LoginPage() {
               {/* Email */}
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
-                  Email
+                  {tr.login.email}
                 </label>
                 <div className="relative">
                   <div className="absolute left-4 top-1/2 -translate-y-1/2">
@@ -152,7 +154,7 @@ export default function LoginPage() {
               {/* Password */}
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-secondary)" }}>
-                  Contraseña
+                  {tr.login.password}
                 </label>
                 <div className="relative">
                   <div className="absolute left-4 top-1/2 -translate-y-1/2">
@@ -207,7 +209,7 @@ export default function LoginPage() {
                   <Loader2 size={18} className="animate-spin text-white" />
                 ) : (
                   <>
-                    <span>Entrar</span>
+                    <span>{tr.login.enter}</span>
                     <ArrowRight size={16} className="text-white" />
                   </>
                 )}
@@ -217,7 +219,7 @@ export default function LoginPage() {
             {/* Demo hint */}
             <div className="mt-5 pt-5" style={{ borderTop: "1px solid var(--border)" }}>
               <p className="text-xs text-center" style={{ color: "var(--text-tertiary)" }}>
-                Demo: usa cualquier email y contraseña
+                {tr.login.demoHint}
               </p>
               <div className="flex gap-2 mt-3">
                 <button
@@ -226,7 +228,7 @@ export default function LoginPage() {
                   className="flex-1 py-2 rounded-xl text-xs font-medium surface-hover"
                   style={{ color: "var(--text-secondary)" }}
                 >
-                  Empleado
+                  {tr.login.employee}
                 </button>
                 <button
                   type="button"
@@ -234,7 +236,7 @@ export default function LoginPage() {
                   className="flex-1 py-2 rounded-xl text-xs font-medium surface-hover"
                   style={{ color: "var(--text-secondary)" }}
                 >
-                  Admin
+                  {tr.login.admin}
                 </button>
               </div>
             </div>
@@ -242,7 +244,7 @@ export default function LoginPage() {
 
           {/* Footer */}
           <p className="text-center text-xs mt-8" style={{ color: "var(--text-tertiary)" }}>
-            © 2025 AMITEC · Control Horario v2.0
+            {tr.login.footer}
           </p>
         </motion.div>
       </div>

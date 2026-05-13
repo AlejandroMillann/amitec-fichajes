@@ -8,6 +8,7 @@ import {
 import { LIVE_EMPLOYEES, WEEK_CHART_DATA } from "@/lib/mock-data";
 import { useRequests } from "@/hooks/useRequests";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useLocale } from "@/providers/LocaleProvider";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
 } from "recharts";
@@ -25,12 +26,6 @@ const itemVariants = {
 const workingNow = LIVE_EMPLOYEES.filter((e) => e.status === "working").length;
 const onBreak = LIVE_EMPLOYEES.filter((e) => e.status === "paused").length;
 const absent = LIVE_EMPLOYEES.filter((e) => e.status === "absent").length;
-
-const STATUS_STYLE = {
-  working: { label: "Activo", color: "var(--success)", dot: "#10B981" },
-  paused: { label: "Pausa", color: "var(--warning)", dot: "#F59E0B" },
-  absent: { label: "Ausente", color: "var(--text-tertiary)", dot: "#4A5A7A" },
-};
 
 interface TooltipProps {
   active?: boolean;
@@ -51,15 +46,22 @@ function MiniTooltip({ active, payload, label }: TooltipProps) {
 export default function AdminDashboardPage() {
   const { requests, approveRequest, rejectRequest } = useRequests();
   const { addNotification } = useNotifications();
+  const { tr } = useLocale();
   const pendingRequests = requests.filter((r) => r.status === "pendiente").length;
   const pendingReqs = requests.filter((r) => r.status === "pendiente");
+
+  const STATUS_STYLE = {
+    working: { label: tr.status.active, color: "var(--success)", dot: "#10B981" },
+    paused: { label: tr.status.paused, color: "var(--warning)", dot: "#F59E0B" },
+    absent: { label: tr.status.absent, color: "var(--text-tertiary)", dot: "#4A5A7A" },
+  };
 
   const handleApprove = (req: (typeof requests)[number]) => {
     approveRequest(req.id);
     addNotification({
       type: "request_approved",
-      title: "Solicitud aprobada",
-      message: `Tu solicitud de ${req.type.replace("_", " ")} (${req.days} día${req.days !== 1 ? "s" : ""}) ha sido aprobada`,
+      title: tr.notifications.approvedTitle,
+      message: `${tr.requestTypes[req.type]} (${req.days} ${req.days !== 1 ? "días" : "día"}) — ${tr.notifications.approvedTitle.toLowerCase()}`,
       forUserId: req.employeeId,
       requestId: req.id,
     });
@@ -69,18 +71,18 @@ export default function AdminDashboardPage() {
     rejectRequest(req.id);
     addNotification({
       type: "request_rejected",
-      title: "Solicitud rechazada",
-      message: `Tu solicitud de ${req.type.replace("_", " ")} (${req.days} día${req.days !== 1 ? "s" : ""}) ha sido rechazada`,
+      title: tr.notifications.rejectedTitle,
+      message: `${tr.requestTypes[req.type]} (${req.days} ${req.days !== 1 ? "días" : "día"}) — ${tr.notifications.rejectedTitle.toLowerCase()}`,
       forUserId: req.employeeId,
       requestId: req.id,
     });
   };
 
   const ADMIN_STATS = [
-    { icon: Users, label: "Total empleados", value: LIVE_EMPLOYEES.length, color: "var(--primary)", bg: "var(--primary-light)" },
-    { icon: Activity, label: "Trabajando ahora", value: workingNow, color: "var(--success)", bg: "var(--success-light)" },
-    { icon: Clock, label: "En pausa", value: onBreak, color: "var(--warning)", bg: "var(--warning-light)" },
-    { icon: AlertCircle, label: "Solicitudes", value: pendingRequests, color: "var(--violet)", bg: "var(--violet-light)" },
+    { icon: Users, label: tr.admin.totalEmployees, value: LIVE_EMPLOYEES.length, color: "var(--primary)", bg: "var(--primary-light)" },
+    { icon: Activity, label: tr.admin.workingNow, value: workingNow, color: "var(--success)", bg: "var(--success-light)" },
+    { icon: Clock, label: tr.admin.onBreak, value: onBreak, color: "var(--warning)", bg: "var(--warning-light)" },
+    { icon: AlertCircle, label: tr.admin.requests, value: pendingRequests, color: "var(--violet)", bg: "var(--violet-light)" },
   ];
 
   return (
@@ -121,13 +123,15 @@ export default function AdminDashboardPage() {
                 <Wifi size={16} style={{ color: "var(--success)" }} />
               </div>
               <div>
-                <h3 className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>En tiempo real</h3>
-                <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>{workingNow} activos ahora</p>
+                <h3 className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>{tr.admin.realTime}</h3>
+                <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
+                  {tr.admin.activeNow.replace("{n}", String(workingNow))}
+                </p>
               </div>
             </div>
             <Link href="/admin/empleados">
               <span className="text-xs font-medium flex items-center gap-1" style={{ color: "var(--primary)" }}>
-                Ver todos <ChevronRight size={12} />
+                {tr.admin.seeAll} <ChevronRight size={12} />
               </span>
             </Link>
           </div>
@@ -146,7 +150,6 @@ export default function AdminDashboardPage() {
                   transition={{ delay: i * 0.05 }}
                   className="flex items-center gap-3 px-3 py-3 rounded-2xl surface-hover cursor-pointer"
                 >
-                  {/* Avatar */}
                   <div className="relative flex-shrink-0">
                     <div
                       className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-xs font-bold"
@@ -202,13 +205,13 @@ export default function AdminDashboardPage() {
             <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: "1px solid var(--border)" }}>
               <div className="flex items-center gap-2">
                 <Calendar size={16} style={{ color: "var(--violet)" }} />
-                <span className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>Solicitudes</span>
+                <span className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>{tr.admin.requests}</span>
               </div>
               <div
                 className="px-2 py-0.5 rounded-full text-xs font-bold"
                 style={{ background: "var(--violet-light)", color: "var(--violet)" }}
               >
-                {pendingRequests} nuevas
+                {tr.admin.newRequests.replace("{n}", String(pendingRequests))}
               </div>
             </div>
 
@@ -225,7 +228,7 @@ export default function AdminDashboardPage() {
                         {req.employeeName.split(" ")[0]}
                       </p>
                       <p className="text-[10px] mt-0.5 capitalize" style={{ color: "var(--text-tertiary)" }}>
-                        {req.type.replace("_", " ")} · {req.days}d
+                        {tr.requestTypes[req.type]} · {req.days}d
                       </p>
                     </div>
                     <div className="flex gap-1.5 flex-shrink-0 mt-0.5">
@@ -253,13 +256,13 @@ export default function AdminDashboardPage() {
               {pendingReqs.length === 0 && (
                 <div className="flex flex-col items-center gap-2 py-6 text-center">
                   <CheckCircle2 size={24} style={{ color: "var(--success)" }} />
-                  <p className="text-xs" style={{ color: "var(--text-secondary)" }}>Todo al día</p>
+                  <p className="text-xs" style={{ color: "var(--text-secondary)" }}>{tr.status.allUpToDate}</p>
                 </div>
               )}
 
               <Link href="/admin/empleados">
                 <div className="flex items-center justify-center py-2 text-xs font-medium gap-1" style={{ color: "var(--primary)" }}>
-                  Ver todas <ChevronRight size={12} />
+                  {tr.common.seeAllFem} <ChevronRight size={12} />
                 </div>
               </Link>
             </div>
@@ -267,12 +270,12 @@ export default function AdminDashboardPage() {
 
           {/* Quick stats absent */}
           <motion.div variants={itemVariants} className="glass rounded-2xl p-4">
-            <p className="text-xs font-bold mb-3" style={{ color: "var(--text-secondary)" }}>Resumen hoy</p>
+            <p className="text-xs font-bold mb-3" style={{ color: "var(--text-secondary)" }}>{tr.admin.todaySummary}</p>
             <div className="space-y-2">
               {[
-                { label: "Presentes", value: workingNow + onBreak, total: LIVE_EMPLOYEES.length, color: "var(--success)" },
-                { label: "Ausentes", value: absent, total: LIVE_EMPLOYEES.length, color: "var(--danger)" },
-                { label: "En pausa", value: onBreak, total: LIVE_EMPLOYEES.length, color: "var(--warning)" },
+                { label: tr.admin.present, value: workingNow + onBreak, total: LIVE_EMPLOYEES.length, color: "var(--success)" },
+                { label: tr.admin.absent, value: absent, total: LIVE_EMPLOYEES.length, color: "var(--danger)" },
+                { label: tr.admin.onBreak, value: onBreak, total: LIVE_EMPLOYEES.length, color: "var(--warning)" },
               ].map((item) => (
                 <div key={item.label}>
                   <div className="flex justify-between mb-1">
@@ -300,17 +303,17 @@ export default function AdminDashboardPage() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h3 className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>
-              Horas por día esta semana
+              {tr.admin.hoursPerDay}
             </h3>
             <p className="text-xs mt-0.5" style={{ color: "var(--text-tertiary)" }}>
-              Total empresa: {(workingNow * 4.2).toFixed(0)}h hoy
+              {tr.admin.companyTotal.replace("{n}", (workingNow * 4.2).toFixed(0))}
             </p>
           </div>
           <div
             className="px-3 py-1 rounded-full text-xs font-bold"
             style={{ background: "var(--primary-light)", color: "var(--primary)" }}
           >
-            Semana actual
+            {tr.admin.currentWeek}
           </div>
         </div>
         <div style={{ height: 180 }}>
@@ -332,7 +335,7 @@ export default function AdminDashboardPage() {
           </ResponsiveContainer>
         </div>
         <p className="text-[10px] text-center mt-2" style={{ color: "var(--text-tertiary)" }}>
-          Verde = horas extra · Azul = dentro del objetivo
+          {tr.admin.chartLegend}
         </p>
       </motion.div>
     </motion.div>

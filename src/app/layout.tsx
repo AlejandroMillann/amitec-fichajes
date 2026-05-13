@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/providers/ThemeProvider";
+import { LocaleProvider } from "@/providers/LocaleProvider";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { IOSInstallBanner } from "@/components/IOSInstallBanner";
 
@@ -47,7 +48,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192.png" />
       </head>
       <body suppressHydrationWarning>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider><LocaleProvider>{children}</LocaleProvider></ThemeProvider>
         <ServiceWorkerRegister />
         <IOSInstallBanner />
       </body>

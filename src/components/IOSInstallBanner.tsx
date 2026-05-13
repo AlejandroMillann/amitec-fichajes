@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Share } from "lucide-react";
+import { useLocale } from "@/providers/LocaleProvider";
 
 function isIOS() {
   if (typeof navigator === "undefined") return false;
@@ -21,6 +22,7 @@ const DISMISSED_KEY = "amitec-ios-banner-dismissed";
 
 export function IOSInstallBanner() {
   const [show, setShow] = useState(false);
+  const { tr } = useLocale();
 
   useEffect(() => {
     if (!isIOS()) return;
@@ -74,10 +76,10 @@ export function IOSInstallBanner() {
 
               <div>
                 <p className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>
-                  Instala AMITEC Fichajes
+                  {tr.install.title}
                 </p>
                 <p className="text-xs mt-0.5 leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-                  Añádela a la pantalla de inicio para usarla como una app real, sin la barra del navegador.
+                  {tr.install.body}
                 </p>
               </div>
             </div>
@@ -88,7 +90,7 @@ export function IOSInstallBanner() {
               style={{ background: "var(--bg-elevated)" }}
             >
               <span className="text-xs" style={{ color: "var(--text-secondary)" }}>
-                Pulsa
+                {tr.install.instruction}
               </span>
               <div
                 className="flex items-center justify-center w-6 h-6 rounded-lg"
@@ -97,10 +99,7 @@ export function IOSInstallBanner() {
                 <Share size={13} style={{ color: "var(--primary)" }} />
               </div>
               <span className="text-xs" style={{ color: "var(--text-secondary)" }}>
-                y selecciona{" "}
-                <span className="font-semibold" style={{ color: "var(--text-primary)" }}>
-                  &ldquo;Añadir a pantalla de inicio&rdquo;
-                </span>
+                {tr.install.instructionEnd}
               </span>
             </div>
           </div>

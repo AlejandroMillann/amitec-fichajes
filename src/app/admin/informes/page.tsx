@@ -7,6 +7,7 @@ import {
   TrendingUp, Clock, Users, ChevronDown, Filter,
 } from "lucide-react";
 import { ALL_EMPLOYEES } from "@/lib/mock-data";
+import { useLocale } from "@/providers/LocaleProvider";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   LineChart, Line, CartesianGrid, Legend,
@@ -73,6 +74,7 @@ function CustomTooltip({ active, payload, label }: TooltipProps) {
 export default function InformesPage() {
   const [period] = useState("Mayo 2025");
   const [exportType, setExportType] = useState<"pdf" | "csv" | null>(null);
+  const { tr } = useLocale();
 
   const handleExportCSV = () => {
     setExportType("csv");
@@ -154,7 +156,7 @@ export default function InformesPage() {
       {/* Header */}
       <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-extrabold" style={{ color: "var(--text-primary)" }}>Informes</h2>
+          <h2 className="text-xl font-extrabold" style={{ color: "var(--text-primary)" }}>{tr.reports.title}</h2>
           <p className="text-sm mt-0.5" style={{ color: "var(--text-secondary)" }}>
             Exportación y análisis de datos laborales
           </p>
@@ -171,7 +173,7 @@ export default function InformesPage() {
             }}
           >
             <Download size={15} />
-            {exportType === "pdf" ? "Abriendo..." : "PDF"}
+            {exportType === "pdf" ? tr.common.loading : tr.reports.exportPDF}
           </motion.button>
           <motion.button
             whileTap={{ scale: 0.95 }}
@@ -184,7 +186,7 @@ export default function InformesPage() {
             }}
           >
             <Download size={15} />
-            {exportType === "csv" ? "Descargando..." : "Excel / CSV"}
+            {exportType === "csv" ? tr.common.loading : tr.reports.exportCSV}
           </motion.button>
         </div>
       </motion.div>

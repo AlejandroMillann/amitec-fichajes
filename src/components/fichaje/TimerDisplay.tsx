@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { formatTime } from "@/lib/utils";
 import type { FichajeStatus } from "@/lib/types";
+import { useLocale } from "@/providers/LocaleProvider";
 
 interface TimerDisplayProps {
   elapsedSeconds: number;
@@ -11,23 +12,19 @@ interface TimerDisplayProps {
   status: FichajeStatus;
 }
 
-const STATUS_LABEL = {
-  idle: { text: "Sin jornada activa", color: "var(--text-tertiary)" },
-  working: { text: "Jornada activa", color: "var(--success)" },
-  paused: { text: "En pausa", color: "var(--warning)" },
-};
-
 export function TimerDisplay({ elapsedSeconds, remainingSeconds, progressPercent, status }: TimerDisplayProps) {
-  const statusInfo = STATUS_LABEL[status];
+  const { tr } = useLocale();
   const isOvertime = progressPercent >= 100;
+
+  const statusInfo = {
+    idle:    { text: tr.fichaje.noShift,    color: "var(--text-tertiary)" },
+    working: { text: tr.fichaje.activeShift, color: "var(--success)" },
+    paused:  { text: tr.fichaje.onBreak,    color: "var(--warning)" },
+  }[status];
 
   return (
     <div className="flex flex-col items-center gap-4 w-full">
-      {/* Status label */}
-      <motion.div
-        key={status}
-        initial={{ opacity: 0, y: 4 }}
-        animate={{ opacity: 1, y: 0 }}
+      <motion.div key={status} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
         className="flex items-center gap-2 px-3 py-1.5 rounded-full"
         style={{ background: "var(--bg-elevated)", border: "1px solid var(--border)" }}
       >
@@ -42,38 +39,25 @@ export function TimerDisplay({ elapsedSeconds, remainingSeconds, progressPercent
         </span>
       </motion.div>
 
-      {/* Main time display */}
       <div className="flex flex-col items-center">
-        <motion.p
-          key={Math.floor(elapsedSeconds)}
-          className="font-bold tabular-nums"
-          style={{
-            fontSize: "clamp(2.5rem, 12vw, 4rem)",
-            letterSpacing: "-0.02em",
-            color: isOvertime ? "var(--success)" : "var(--text-primary)",
-          }}
+        <motion.p key={Math.floor(elapsedSeconds)} className="font-bold tabular-nums"
+          style={{ fontSize: "clamp(2.5rem, 12vw, 4rem)", letterSpacing: "-0.02em", color: isOvertime ? "var(--success)" : "var(--text-primary)" }}
         >
           {formatTime(elapsedSeconds)}
         </motion.p>
         <p className="text-sm mt-1" style={{ color: "var(--text-tertiary)" }}>
           {isOvertime
-            ? `+${formatTime(elapsedSeconds - 8 * 3600)} extra`
-            : `Restante: ${formatTime(remainingSeconds)}`}
+            ? `+${formatTime(elapsedSeconds - 8 * 3600)} ${tr.fichaje.extra}`
+            : `${tr.fichaje.remaining}: ${formatTime(remainingSeconds)}`}
         </p>
       </div>
 
-      {/* Progress bar */}
       <div className="w-full max-w-xs">
         <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "var(--bg-elevated)" }}>
-          <motion.div
-            className="h-full rounded-full"
+          <motion.div className="h-full rounded-full"
             style={{
-              background: isOvertime
-                ? "linear-gradient(90deg, var(--success), #34D399)"
-                : "linear-gradient(90deg, var(--primary), var(--cyan))",
-              boxShadow: isOvertime
-                ? "0 0 8px rgba(16,185,129,0.5)"
-                : "0 0 8px rgba(14,165,233,0.5)",
+              background: isOvertime ? "linear-gradient(90deg, var(--success), #34D399)" : "linear-gradient(90deg, var(--primary), var(--cyan))",
+              boxShadow: isOvertime ? "0 0 8px rgba(16,185,129,0.5)" : "0 0 8px rgba(14,165,233,0.5)",
             }}
             initial={{ width: 0 }}
             animate={{ width: `${Math.min(progressPercent, 100)}%` }}
@@ -83,7 +67,7 @@ export function TimerDisplay({ elapsedSeconds, remainingSeconds, progressPercent
         <div className="flex justify-between mt-1">
           <span className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>0h</span>
           <span className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>
-            {Math.round(progressPercent)}% completado
+            {Math.round(progressPercent)}% {tr.fichaje.completed}
           </span>
           <span className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>8h</span>
         </div>

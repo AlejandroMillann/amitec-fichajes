@@ -7,7 +7,8 @@ import { FichajeButton } from "@/components/fichaje/FichajeButton";
 import { TimerDisplay } from "@/components/fichaje/TimerDisplay";
 import { useFichaje } from "@/hooks/useFichaje";
 import { useAuth } from "@/hooks/useAuth";
-import { formatTime, formatTimeHHMM, getGreeting } from "@/lib/utils";
+import { useLocale } from "@/providers/LocaleProvider";
+import { formatTime, formatTimeHHMM } from "@/lib/utils";
 import { RECENT_SESSIONS, WEEK_CHART_DATA } from "@/lib/mock-data";
 import { Coffee, Clock, TrendingUp, ChevronRight, Pause, Play, LogOut, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -22,8 +23,15 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { duration: 0.2, ease: [0.16, 1, 0.3, 1] } },
 };
 
+function getLocalizedGreeting(name: string, morning: string, afternoon: string, evening: string): string {
+  const hour = new Date().getHours();
+  const greeting = hour < 6 ? evening : hour < 12 ? morning : hour < 20 ? afternoon : evening;
+  return `${greeting}, ${name}`;
+}
+
 export default function DashboardPage() {
   const { user } = useAuth();
+  const { tr } = useLocale();
   const {
     status,
     elapsedSeconds,
@@ -56,6 +64,13 @@ export default function DashboardPage() {
   const weekTotal = WEEK_CHART_DATA.reduce((sum, d) => sum + d.hours, 0);
   const todayHoursDecimal = elapsedSeconds / 3600;
 
+  const EVENT_TYPE_CONFIG = {
+    entrada: { label: tr.dashboard.eventTypes.entrada, color: "var(--success)", bg: "var(--success-light)" },
+    salida: { label: tr.dashboard.eventTypes.salida, color: "var(--danger)", bg: "var(--danger-light)" },
+    inicio_pausa: { label: tr.dashboard.eventTypes.inicio_pausa, color: "var(--warning)", bg: "var(--warning-light)" },
+    fin_pausa: { label: tr.dashboard.eventTypes.fin_pausa, color: "var(--primary)", bg: "var(--primary-light)" },
+  };
+
   return (
     <div className="flex flex-col min-h-full">
       <TopBar />
@@ -69,7 +84,12 @@ export default function DashboardPage() {
         {/* Greeting */}
         <motion.div variants={itemVariants} className="pt-4">
           <h1 className="text-2xl font-extrabold tracking-tight" style={{ color: "var(--text-primary)" }}>
-            {getGreeting(user?.name ?? "Usuario")}
+            {getLocalizedGreeting(
+              user?.name ?? "Usuario",
+              tr.dashboard.greetingMorning,
+              tr.dashboard.greetingAfternoon,
+              tr.dashboard.greetingEvening,
+            )}
           </h1>
           <p className="text-sm mt-0.5" style={{ color: "var(--text-secondary)" }}>
             {new Date().toLocaleDateString("es-ES", {
@@ -83,19 +103,19 @@ export default function DashboardPage() {
           {[
             {
               icon: Clock,
-              label: "Hoy",
+              label: tr.common.today,
               value: elapsedSeconds > 0 ? formatTime(elapsedSeconds) : "0:00:00",
               color: "var(--primary)",
             },
             {
               icon: TrendingUp,
-              label: "Semana",
+              label: tr.common.week,
               value: `${(weekTotal + todayHoursDecimal).toFixed(1)}h`,
               color: "var(--cyan)",
             },
             {
               icon: Coffee,
-              label: "Pausas",
+              label: tr.dashboard.breaks,
               value: `${events.filter((e) => e.type === "inicio_pausa").length}`,
               color: "var(--violet)",
             },
@@ -147,7 +167,7 @@ export default function DashboardPage() {
                 }}
               >
                 <Pause size={14} />
-                Pausar
+                {tr.dashboard.pause}
               </motion.button>
             )}
             {status === "paused" && (
@@ -165,7 +185,7 @@ export default function DashboardPage() {
                   }}
                 >
                   <Play size={14} />
-                  Reanudar
+                  {tr.dashboard.resume}
                 </motion.button>
                 <motion.button
                   initial={{ opacity: 0, scale: 0.8 }}
@@ -180,7 +200,7 @@ export default function DashboardPage() {
                   }}
                 >
                   <LogOut size={14} />
-                  Salida
+                  {tr.dashboard.exit}
                 </motion.button>
               </>
             )}
@@ -191,17 +211,11 @@ export default function DashboardPage() {
         {events.length > 0 && (
           <motion.div variants={itemVariants} className="glass rounded-3xl p-5">
             <h3 className="text-sm font-semibold mb-4" style={{ color: "var(--text-secondary)" }}>
-              Actividad de hoy
+              {tr.dashboard.todayActivity}
             </h3>
             <div className="space-y-3">
               {events.slice().reverse().slice(0, 5).map((event, i) => {
-                const typeConfig = {
-                  entrada: { label: "Entrada", color: "var(--success)", bg: "var(--success-light)" },
-                  salida: { label: "Salida", color: "var(--danger)", bg: "var(--danger-light)" },
-                  inicio_pausa: { label: "Inicio pausa", color: "var(--warning)", bg: "var(--warning-light)" },
-                  fin_pausa: { label: "Fin pausa", color: "var(--primary)", bg: "var(--primary-light)" },
-                }[event.type];
-
+                const typeConfig = EVENT_TYPE_CONFIG[event.type];
                 return (
                   <motion.div
                     key={event.id}
@@ -246,10 +260,10 @@ export default function DashboardPage() {
         <motion.div variants={itemVariants} className="glass rounded-3xl p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold" style={{ color: "var(--text-secondary)" }}>
-              Últimas jornadas
+              {tr.dashboard.recentDays}
             </h3>
             <button className="flex items-center gap-1 text-xs font-medium" style={{ color: "var(--primary)" }}>
-              Ver todo <ChevronRight size={12} />
+              {tr.common.seeAll} <ChevronRight size={12} />
             </button>
           </div>
           <div className="space-y-2">
@@ -287,7 +301,7 @@ export default function DashboardPage() {
                       {hours}h {mins > 0 ? `${mins}m` : ""}
                     </p>
                     {isOver && (
-                      <p className="text-[10px]" style={{ color: "var(--success)" }}>+extra</p>
+                      <p className="text-[10px]" style={{ color: "var(--success)" }}>+{tr.fichaje.extra}</p>
                     )}
                   </div>
                 </motion.div>
@@ -325,10 +339,10 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <h3 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>
-                    ¿Fichar salida?
+                    {tr.dashboard.clockOut}
                   </h3>
                   <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>
-                    Llevas trabajando{" "}
+                    {tr.dashboard.clockOutBody}{" "}
                     <span className="font-semibold" style={{ color: "var(--text-primary)" }}>
                       {formatTime(elapsedSeconds)}
                     </span>
@@ -341,7 +355,7 @@ export default function DashboardPage() {
                   onClick={() => setShowConfirm(null)}
                   className="btn-secondary h-12 rounded-2xl text-sm font-semibold"
                 >
-                  Cancelar
+                  {tr.common.cancel}
                 </motion.button>
                 <motion.button
                   whileTap={{ scale: 0.95 }}
@@ -353,7 +367,7 @@ export default function DashboardPage() {
                   }}
                 >
                   <LogOut size={16} />
-                  Confirmar
+                  {tr.common.confirm}
                 </motion.button>
               </div>
             </motion.div>

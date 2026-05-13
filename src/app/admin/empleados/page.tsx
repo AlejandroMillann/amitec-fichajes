@@ -6,6 +6,7 @@ import { Search, UserPlus, CheckCircle2, XCircle, Clock, ChevronRight, Users } f
 import { ALL_EMPLOYEES } from "@/lib/mock-data";
 import { useRequests } from "@/hooks/useRequests";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useLocale } from "@/providers/LocaleProvider";
 import type { Employee } from "@/lib/types";
 import { formatDateShort, getInitials } from "@/lib/utils";
 
@@ -29,6 +30,7 @@ const DEPT_COLORS: Record<string, string> = {
 };
 
 function EmployeeCard({ emp }: { emp: Employee }) {
+  const { tr } = useLocale();
   const initials = getInitials(emp.name, emp.lastName);
   const deptColor = DEPT_COLORS[emp.department] ?? "var(--primary)";
   const vacRemaining = emp.vacationDays - emp.vacationUsed;
@@ -87,12 +89,12 @@ function EmployeeCard({ emp }: { emp: Employee }) {
             <div className="flex items-center gap-1">
               <CheckCircle2 size={11} style={{ color: "var(--success)" }} />
               <span className="text-[11px]" style={{ color: "var(--text-secondary)" }}>
-                {vacRemaining}d vacac.
+                {vacRemaining}d
               </span>
             </div>
             <div className="w-1 h-1 rounded-full" style={{ background: "var(--border-strong)" }} />
             <span className="text-[11px]" style={{ color: "var(--text-tertiary)" }}>
-              Desde {formatDateShort(emp.joinDate)}
+              {tr.profile.joinDate} {formatDateShort(emp.joinDate)}
             </span>
           </div>
         </div>
@@ -101,13 +103,6 @@ function EmployeeCard({ emp }: { emp: Employee }) {
   );
 }
 
-const REQUEST_TYPE_LABEL: Record<string, string> = {
-  vacaciones: "Vacaciones",
-  permiso: "Permiso",
-  ausencia_horas: "Ausencia",
-  baja_medica: "Baja médica",
-};
-
 export default function EmpleadosPage() {
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState<"empleados" | "solicitudes">("empleados");
@@ -115,14 +110,15 @@ export default function EmpleadosPage() {
 
   const { requests, approveRequest, rejectRequest } = useRequests();
   const { addNotification } = useNotifications();
+  const { tr } = useLocale();
   const pendingCount = requests.filter((r) => r.status === "pendiente").length;
 
   const handleApprove = (req: (typeof requests)[number]) => {
     approveRequest(req.id);
     addNotification({
       type: "request_approved",
-      title: "Solicitud aprobada",
-      message: `Tu solicitud de ${req.type.replace("_", " ")} (${req.days} día${req.days !== 1 ? "s" : ""}) ha sido aprobada`,
+      title: tr.notifications.approvedTitle,
+      message: `${tr.requestTypes[req.type]} (${req.days} ${req.days !== 1 ? "días" : "día"}) — ${tr.notifications.approvedTitle.toLowerCase()}`,
       forUserId: req.employeeId,
       requestId: req.id,
     });
@@ -132,8 +128,8 @@ export default function EmpleadosPage() {
     rejectRequest(req.id);
     addNotification({
       type: "request_rejected",
-      title: "Solicitud rechazada",
-      message: `Tu solicitud de ${req.type.replace("_", " ")} (${req.days} día${req.days !== 1 ? "s" : ""}) ha sido rechazada`,
+      title: tr.notifications.rejectedTitle,
+      message: `${tr.requestTypes[req.type]} (${req.days} ${req.days !== 1 ? "días" : "día"}) — ${tr.notifications.rejectedTitle.toLowerCase()}`,
       forUserId: req.employeeId,
       requestId: req.id,
     });
@@ -149,6 +145,11 @@ export default function EmpleadosPage() {
     requestFilter === "todas" ? true : r.status === "pendiente"
   );
 
+  const TABS = [
+    { key: "empleados" as const, label: tr.admin.employeesTab },
+    { key: "solicitudes" as const, label: tr.admin.requestsTab },
+  ];
+
   return (
     <motion.div
       variants={containerVariants}
@@ -160,10 +161,10 @@ export default function EmpleadosPage() {
       <motion.div variants={itemVariants} className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-extrabold" style={{ color: "var(--text-primary)" }}>
-            Gestión de empleados
+            {tr.admin.employeeManagement}
           </h2>
           <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-            {ALL_EMPLOYEES.length} empleados registrados
+            {tr.admin.registeredEmployees.replace("{n}", String(ALL_EMPLOYEES.length))}
           </p>
         </div>
         <motion.button
@@ -171,26 +172,26 @@ export default function EmpleadosPage() {
           className="btn-primary hidden sm:flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-semibold"
         >
           <UserPlus size={16} />
-          Añadir
+          {tr.common.add}
         </motion.button>
       </motion.div>
 
       {/* Tabs */}
       <motion.div variants={itemVariants} className="flex gap-1 p-1 rounded-2xl w-fit" style={{ background: "var(--bg-elevated)" }}>
-        {(["empleados", "solicitudes"] as const).map((tab) => (
+        {TABS.map((tab) => (
           <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className="px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 capitalize"
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className="px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200"
             style={{
-              background: activeTab === tab ? "var(--bg-surface)" : "transparent",
-              color: activeTab === tab ? "var(--primary)" : "var(--text-tertiary)",
-              boxShadow: activeTab === tab ? "var(--card-shadow)" : "none",
+              background: activeTab === tab.key ? "var(--bg-surface)" : "transparent",
+              color: activeTab === tab.key ? "var(--primary)" : "var(--text-tertiary)",
+              boxShadow: activeTab === tab.key ? "var(--card-shadow)" : "none",
             }}
           >
-            {tab === "solicitudes" && pendingCount > 0 ? (
+            {tab.key === "solicitudes" && pendingCount > 0 ? (
               <span className="flex items-center gap-2">
-                {tab}
+                {tab.label}
                 <span
                   className="w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center"
                   style={{ background: "var(--violet-light)", color: "var(--violet)" }}
@@ -198,7 +199,7 @@ export default function EmpleadosPage() {
                   {pendingCount}
                 </span>
               </span>
-            ) : tab}
+            ) : tab.label}
           </button>
         ))}
       </motion.div>
@@ -220,7 +221,7 @@ export default function EmpleadosPage() {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Buscar empleado..."
+                placeholder={tr.admin.searchEmployee}
                 className="input-base w-full pl-11 pr-4 h-12 rounded-2xl text-sm"
               />
               {search && (
@@ -248,9 +249,9 @@ export default function EmpleadosPage() {
                 <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: "var(--bg-elevated)" }}>
                   <Users size={24} style={{ color: "var(--text-tertiary)" }} />
                 </div>
-                <p className="text-sm" style={{ color: "var(--text-secondary)" }}>Sin resultados</p>
+                <p className="text-sm" style={{ color: "var(--text-secondary)" }}>{tr.common.noResults}</p>
                 <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
-                  Prueba con otro término de búsqueda
+                  {tr.common.tryOtherSearch}
                 </p>
               </div>
             )}
@@ -266,18 +267,21 @@ export default function EmpleadosPage() {
           >
             {/* Filter */}
             <div className="flex gap-2">
-              {(["pendientes", "todas"] as const).map((f) => (
+              {([
+                { key: "pendientes" as const, label: tr.admin.pendingTab },
+                { key: "todas" as const, label: tr.admin.allTab },
+              ]).map((f) => (
                 <button
-                  key={f}
-                  onClick={() => setRequestFilter(f)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold capitalize transition-all"
+                  key={f.key}
+                  onClick={() => setRequestFilter(f.key)}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold transition-all"
                   style={{
-                    background: requestFilter === f ? "var(--primary-light)" : "var(--bg-elevated)",
-                    color: requestFilter === f ? "var(--primary)" : "var(--text-secondary)",
-                    border: requestFilter === f ? "1px solid rgba(14,165,233,0.3)" : "1px solid transparent",
+                    background: requestFilter === f.key ? "var(--primary-light)" : "var(--bg-elevated)",
+                    color: requestFilter === f.key ? "var(--primary)" : "var(--text-secondary)",
+                    border: requestFilter === f.key ? "1px solid rgba(14,165,233,0.3)" : "1px solid transparent",
                   }}
                 >
-                  {f}
+                  {f.label}
                 </button>
               ))}
             </div>
@@ -285,6 +289,11 @@ export default function EmpleadosPage() {
             <div className="space-y-3">
               {visibleRequests.map((req, i) => {
                 const isPending = req.status === "pendiente";
+                const statusLabel = req.status === "pendiente"
+                  ? tr.status.pending
+                  : req.status === "aprobada"
+                  ? tr.status.approved
+                  : tr.status.rejected;
                 return (
                   <motion.div
                     key={req.id}
@@ -308,7 +317,7 @@ export default function EmpleadosPage() {
                               {req.employeeName}
                             </p>
                             <p className="text-xs mt-0.5 capitalize" style={{ color: "var(--text-secondary)" }}>
-                              {REQUEST_TYPE_LABEL[req.type]} · {req.days} día{req.days !== 1 ? "s" : ""}
+                              {tr.requestTypes[req.type]} · {req.days}d
                             </p>
                           </div>
                           <div
@@ -318,7 +327,7 @@ export default function EmpleadosPage() {
                               color: req.status === "pendiente" ? "var(--warning)" : req.status === "aprobada" ? "var(--success)" : "var(--danger)",
                             }}
                           >
-                            {req.status === "pendiente" ? "Pendiente" : req.status === "aprobada" ? "Aprobada" : "Rechazada"}
+                            {statusLabel}
                           </div>
                         </div>
 
@@ -342,7 +351,7 @@ export default function EmpleadosPage() {
                               style={{ background: "var(--success-light)", color: "var(--success)" }}
                             >
                               <CheckCircle2 size={13} />
-                              Aprobar
+                              {tr.common.approve}
                             </motion.button>
                             <motion.button
                               whileTap={{ scale: 0.95 }}
@@ -351,7 +360,7 @@ export default function EmpleadosPage() {
                               style={{ background: "var(--danger-light)", color: "var(--danger)" }}
                             >
                               <XCircle size={13} />
-                              Rechazar
+                              {tr.common.reject}
                             </motion.button>
                             <button
                               className="w-9 flex items-center justify-center rounded-xl"
@@ -371,10 +380,10 @@ export default function EmpleadosPage() {
                 <div className="flex flex-col items-center gap-3 py-16 text-center">
                   <CheckCircle2 size={32} style={{ color: "var(--success)" }} />
                   <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-                    Todo al día
+                    {tr.status.allUpToDate}
                   </p>
                   <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
-                    No hay solicitudes pendientes
+                    {tr.admin.noPendingRequests}
                   </p>
                 </div>
               )}

@@ -9,6 +9,7 @@ import { TopBar } from "@/components/layout/TopBar";
 import { TrendingUp, Clock, Award, CalendarCheck, Zap, Target } from "lucide-react";
 import { WEEK_CHART_DATA, MONTH_STATS } from "@/lib/mock-data";
 import { useFichaje } from "@/hooks/useFichaje";
+import { useLocale } from "@/providers/LocaleProvider";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -43,9 +44,9 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
 
 export default function EstadisticasPage() {
   const { elapsedSeconds } = useFichaje();
+  const { tr } = useLocale();
 
-  // Inject today's actual worked hours into the chart data
-  const todayIndex = (new Date().getDay() + 6) % 7; // Mon=0, Tue=1, ..., Sun=6
+  const todayIndex = (new Date().getDay() + 6) % 7;
   const todayHours = parseFloat((elapsedSeconds / 3600).toFixed(1));
 
   const liveChartData = useMemo(() => {
@@ -62,33 +63,33 @@ export default function EstadisticasPage() {
   const statCards = [
     {
       icon: Clock,
-      label: "Horas esta semana",
+      label: tr.stats.hoursWeek,
       value: `${weekTotal.toFixed(1)}h`,
-      sub: `de ${weekTarget}h objetivo`,
+      sub: tr.stats.ofTarget.replace("{n}", String(weekTarget)),
       color: "var(--primary)",
       bg: "var(--primary-light)",
     },
     {
       icon: Target,
-      label: "Horas este mes",
+      label: tr.stats.hoursMonth,
       value: `${MONTH_STATS.totalHours}h`,
-      sub: `de ${MONTH_STATS.targetHours}h`,
+      sub: tr.stats.ofTarget.replace("{n}", String(MONTH_STATS.targetHours)),
       color: "var(--cyan)",
       bg: "var(--cyan-light)",
     },
     {
       icon: Zap,
-      label: "Horas extra",
+      label: tr.stats.overtime,
       value: `+${overtime.toFixed(1)}h`,
-      sub: "esta semana",
+      sub: tr.stats.thisWeek,
       color: "var(--success)",
       bg: "var(--success-light)",
     },
     {
       icon: CalendarCheck,
-      label: "Días trabajados",
+      label: tr.stats.daysWorked,
       value: `${MONTH_STATS.daysWorked}`,
-      sub: `de ${MONTH_STATS.workingDays} laborables`,
+      sub: tr.stats.workingDays.replace("{n}", String(MONTH_STATS.workingDays)),
       color: "var(--violet)",
       bg: "var(--violet-light)",
     },
@@ -96,7 +97,7 @@ export default function EstadisticasPage() {
 
   return (
     <div className="flex flex-col min-h-full">
-      <TopBar title="Estadísticas" showNotifications={false} />
+      <TopBar title={tr.stats.title} showNotifications={false} />
 
       <motion.div
         variants={containerVariants}
@@ -141,10 +142,10 @@ export default function EstadisticasPage() {
           <div className="flex items-center justify-between mb-5">
             <div>
               <h3 className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>
-                Progreso semanal
+                {tr.stats.weeklyProgress}
               </h3>
               <p className="text-xs mt-0.5" style={{ color: "var(--text-tertiary)" }}>
-                {weekTotal.toFixed(1)}h de {weekTarget}h objetivo
+                {weekTotal.toFixed(1)}h {tr.stats.ofTarget.replace("{n}", String(weekTarget))}
               </p>
             </div>
             <div
@@ -222,7 +223,7 @@ export default function EstadisticasPage() {
             </ResponsiveContainer>
           </div>
           <p className="text-[10px] text-center mt-2" style={{ color: "var(--text-tertiary)" }}>
-            — — Línea de 8h objetivo
+            {tr.stats.targetLine}
           </p>
         </motion.div>
 
@@ -237,7 +238,7 @@ export default function EstadisticasPage() {
             </div>
             <div>
               <h3 className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>
-                Resumen mensual
+                {tr.stats.monthlySummary}
               </h3>
               <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
                 {MONTH_STATS.month}
@@ -247,10 +248,10 @@ export default function EstadisticasPage() {
 
           <div className="grid grid-cols-2 gap-3">
             {[
-              { label: "Horas trabajadas", value: `${MONTH_STATS.totalHours}h`, target: `${MONTH_STATS.targetHours}h obj.` },
-              { label: "Días trabajados", value: MONTH_STATS.daysWorked, target: `${MONTH_STATS.workingDays} lab.` },
-              { label: "Horas extra", value: `+${MONTH_STATS.overtimeHours}h`, target: "este mes" },
-              { label: "Puntualidad", value: "94%", target: "media" },
+              { label: tr.stats.hoursWorked, value: `${MONTH_STATS.totalHours}h`, target: `${MONTH_STATS.targetHours}h obj.` },
+              { label: tr.stats.daysWorked, value: MONTH_STATS.daysWorked, target: `${MONTH_STATS.workingDays} lab.` },
+              { label: tr.stats.overtime, value: `+${MONTH_STATS.overtimeHours}h`, target: tr.common.month.toLowerCase() },
+              { label: tr.stats.punctuality, value: "94%", target: tr.stats.average },
             ].map((item) => (
               <div
                 key={item.label}
@@ -278,9 +279,9 @@ export default function EstadisticasPage() {
             </div>
             <div>
               <h3 className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>
-                Días de esta semana
+                {tr.stats.weekDays}
               </h3>
-              <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>Detalle por día</p>
+              <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>{tr.stats.dailyDetail}</p>
             </div>
           </div>
 

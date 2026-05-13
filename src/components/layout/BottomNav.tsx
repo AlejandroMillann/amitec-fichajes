@@ -4,17 +4,19 @@ import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Home, BarChart2, CalendarDays, User } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const NAV_ITEMS = [
-  { href: "/dashboard", icon: Home, label: "Inicio" },
-  { href: "/estadisticas", icon: BarChart2, label: "Estadísticas" },
-  { href: "/vacaciones", icon: CalendarDays, label: "Vacaciones" },
-  { href: "/perfil", icon: User, label: "Perfil" },
-];
+import { useLocale } from "@/providers/LocaleProvider";
 
 export function BottomNav() {
   const pathname = usePathname();
   const router = useRouter();
+  const { tr } = useLocale();
+
+  const NAV_ITEMS = [
+    { href: "/dashboard", icon: Home, label: tr.nav.home },
+    { href: "/estadisticas", icon: BarChart2, label: tr.nav.stats },
+    { href: "/vacaciones", icon: CalendarDays, label: tr.nav.vacations },
+    { href: "/perfil", icon: User, label: tr.nav.profile },
+  ];
 
   return (
     <nav className="bottom-nav fixed bottom-0 left-0 right-0 z-50 safe-bottom">

@@ -6,6 +6,7 @@ import { Bell, CheckCircle2, XCircle, FileText, Zap, X, BellOff, BellRing } from
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNotifications, type AppNotification } from "@/hooks/useNotifications";
+import { useLocale } from "@/providers/LocaleProvider";
 
 interface TopBarProps {
   title?: string;
@@ -14,15 +15,15 @@ interface TopBarProps {
   rightElement?: React.ReactNode;
 }
 
-function timeAgo(timestamp: string): string {
+function timeAgo(timestamp: string, time: { now: string; minutesAgo: string; hoursAgo: string; daysAgo: string }): string {
   const diff = Date.now() - new Date(timestamp).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "Ahora";
-  if (mins < 60) return `Hace ${mins}m`;
+  if (mins < 1) return time.now;
+  if (mins < 60) return time.minutesAgo.replace("{n}", String(mins));
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `Hace ${hrs}h`;
+  if (hrs < 24) return time.hoursAgo.replace("{n}", String(hrs));
   const days = Math.floor(hrs / 24);
-  if (days < 7) return `Hace ${days}d`;
+  if (days < 7) return time.daysAgo.replace("{n}", String(days));
   return new Date(timestamp).toLocaleDateString("es-ES", { day: "numeric", month: "short" });
 }
 
@@ -48,6 +49,7 @@ const TYPE_BG = {
 };
 
 function NotifItem({ n, onRead }: { n: AppNotification; onRead: (id: string) => void }) {
+  const { tr } = useLocale();
   const Icon = TYPE_ICON[n.type];
   const color = TYPE_COLOR[n.type];
   const bg = TYPE_BG[n.type];
@@ -63,30 +65,16 @@ function NotifItem({ n, onRead }: { n: AppNotification; onRead: (id: string) => 
       className="w-full flex items-start gap-3 px-4 py-3 text-left surface-hover transition-colors"
       style={{ borderBottom: "1px solid var(--border)", opacity: n.read ? 0.55 : 1 }}
     >
-      <div
-        className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
-        style={{ background: bg }}
-      >
+      <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: bg }}>
         <Icon size={14} style={{ color }} />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
-          <p className="text-xs font-semibold leading-tight" style={{ color: "var(--text-primary)" }}>
-            {n.title}
-          </p>
-          {!n.read && (
-            <span
-              className="flex-shrink-0 w-2 h-2 rounded-full mt-1"
-              style={{ background: "var(--primary)" }}
-            />
-          )}
+          <p className="text-xs font-semibold leading-tight" style={{ color: "var(--text-primary)" }}>{n.title}</p>
+          {!n.read && <span className="flex-shrink-0 w-2 h-2 rounded-full mt-1" style={{ background: "var(--primary)" }} />}
         </div>
-        <p className="text-[11px] mt-0.5 leading-snug line-clamp-2" style={{ color: "var(--text-secondary)" }}>
-          {n.message}
-        </p>
-        <p className="text-[10px] mt-1" style={{ color: "var(--text-tertiary)" }}>
-          {timeAgo(n.timestamp)}
-        </p>
+        <p className="text-[11px] mt-0.5 leading-snug line-clamp-2" style={{ color: "var(--text-secondary)" }}>{n.message}</p>
+        <p className="text-[10px] mt-1" style={{ color: "var(--text-tertiary)" }}>{timeAgo(n.timestamp, tr.time)}</p>
       </div>
     </motion.button>
   );
@@ -95,6 +83,7 @@ function NotifItem({ n, onRead }: { n: AppNotification; onRead: (id: string) => 
 export function TopBar({ title, subtitle, showNotifications = true, rightElement }: TopBarProps) {
   const [notifOpen, setNotifOpen] = useState(false);
   const { user } = useAuth();
+  const { tr } = useLocale();
   const { notifications, permission, requestPermission, markAsRead, markAllAsRead } = useNotifications();
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -249,21 +238,15 @@ export function TopBar({ title, subtitle, showNotifications = true, rightElement
                 <BellOff size={16} style={{ color: permission === "denied" ? "var(--warning)" : "var(--primary)", flexShrink: 0, marginTop: 1 }} />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold" style={{ color: permission === "denied" ? "var(--warning)" : "var(--primary)" }}>
-                    {permission === "denied" ? "Notificaciones bloqueadas" : "Recibe avisos en tu móvil"}
+                    {permission === "denied" ? tr.notifications.blocked : tr.notifications.enableTitle}
                   </p>
                   <p className="text-[10px] mt-0.5 leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-                    {permission === "denied"
-                      ? "Actívalas en Ajustes del dispositivo → Notificaciones → AMITEC"
-                      : "Notificaciones aunque la app esté cerrada"}
+                    {permission === "denied" ? tr.notifications.blockedBody : tr.notifications.enableBody}
                   </p>
                 </div>
                 {permission === "default" && (
-                  <button
-                    onClick={requestPermission}
-                    className="flex-shrink-0 px-3 py-1.5 rounded-xl text-[11px] font-bold text-white mt-0.5"
-                    style={{ background: "var(--primary)" }}
-                  >
-                    Activar
+                  <button onClick={requestPermission} className="flex-shrink-0 px-3 py-1.5 rounded-xl text-[11px] font-bold text-white mt-0.5" style={{ background: "var(--primary)" }}>
+                    {tr.notifications.enable}
                   </button>
                 )}
               </div>
@@ -271,9 +254,7 @@ export function TopBar({ title, subtitle, showNotifications = true, rightElement
             {permission === "granted" && (
               <div className="flex items-center gap-1.5 px-4 py-2">
                 <BellRing size={11} style={{ color: "var(--success)" }} />
-                <p className="text-[10px]" style={{ color: "var(--success)" }}>
-                  Notificaciones activadas
-                </p>
+                <p className="text-[10px]" style={{ color: "var(--success)" }}>{tr.notifications.enabled}</p>
               </div>
             )}
 

@@ -253,6 +253,8 @@ body {
     color: var(--text-primary);
     transition: all 0.2s ease;
     outline: none;
+    -webkit-appearance: none;
+    appearance: none;
   }
 
   .input-base:focus {
@@ -262,6 +264,16 @@ body {
 
   .input-base::placeholder {
     color: var(--text-tertiary);
+  }
+
+  /* Date input — iOS Safari needs explicit color-scheme to render text correctly */
+  .input-base[type="date"] {
+    color-scheme: light;
+    min-height: 44px;
+  }
+
+  .dark .input-base[type="date"] {
+    color-scheme: dark;
   }
 
   /* Button primary */

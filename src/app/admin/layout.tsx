@@ -5,22 +5,24 @@ import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { useLocale } from "@/providers/LocaleProvider";
 import {
   LayoutDashboard, Users, FileText, LogOut, Bell, ChevronRight,
 } from "lucide-react";
 import Link from "next/link";
-
-const NAV_ITEMS = [
-  { href: "/admin", icon: LayoutDashboard, label: "Dashboard" },
-  { href: "/admin/empleados", icon: Users, label: "Empleados" },
-  { href: "/admin/informes", icon: FileText, label: "Informes" },
-];
 
 // ── Desktop sidebar ──────────────────────────────────────────
 function Sidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const router = useRouter();
+  const { tr } = useLocale();
+
+  const NAV_ITEMS = [
+    { href: "/admin", icon: LayoutDashboard, label: tr.nav.dashboard },
+    { href: "/admin/empleados", icon: Users, label: tr.nav.employees },
+    { href: "/admin/informes", icon: FileText, label: tr.nav.reports },
+  ];
 
   return (
     <div
@@ -87,7 +89,7 @@ function Sidebar() {
           style={{ color: "var(--danger)", background: "var(--danger-light)" }}
         >
           <LogOut size={15} />
-          Cerrar sesión
+          {tr.profile.logout}
         </button>
       </div>
     </div>
@@ -99,7 +101,14 @@ function AdminBottomNav() {
   const pathname = usePathname();
   const router = useRouter();
   const { logout } = useAuth();
+  const { tr } = useLocale();
   const [confirmLogout, setConfirmLogout] = useState(false);
+
+  const NAV_ITEMS = [
+    { href: "/admin", icon: LayoutDashboard, label: tr.nav.dashboard },
+    { href: "/admin/empleados", icon: Users, label: tr.nav.employees },
+    { href: "/admin/informes", icon: FileText, label: tr.nav.reports },
+  ];
 
   const handleLogout = () => {
     logout();
@@ -158,7 +167,7 @@ function AdminBottomNav() {
             style={{ color: "var(--danger)" }}
           >
             <LogOut size={20} strokeWidth={1.8} />
-            <span className="text-[10px] font-medium">Salir</span>
+            <span className="text-[10px] font-medium">{tr.adminLogout.button}</span>
           </motion.button>
         </div>
       </nav>
@@ -191,10 +200,10 @@ function AdminBottomNav() {
               </div>
               <div>
                 <h3 className="text-base font-bold" style={{ color: "var(--text-primary)" }}>
-                  ¿Cerrar sesión?
+                  {tr.adminLogout.title}
                 </h3>
                 <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>
-                  Volverás a la pantalla de inicio de sesión
+                  {tr.adminLogout.body}
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -202,14 +211,14 @@ function AdminBottomNav() {
                   onClick={() => setConfirmLogout(false)}
                   className="btn-secondary h-11 rounded-2xl text-sm font-semibold"
                 >
-                  Cancelar
+                  {tr.common.cancel}
                 </button>
                 <button
                   onClick={handleLogout}
                   className="h-11 rounded-2xl text-sm font-bold text-white"
                   style={{ background: "linear-gradient(135deg, #EF4444, #DC2626)" }}
                 >
-                  Confirmar
+                  {tr.common.confirm}
                 </button>
               </div>
             </motion.div>
@@ -225,6 +234,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { user, isLoading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const { tr } = useLocale();
+
+  const NAV_ITEMS = [
+    { href: "/admin", label: tr.nav.dashboard },
+    { href: "/admin/empleados", label: tr.nav.employees },
+    { href: "/admin/informes", label: tr.nav.reports },
+  ];
 
   useEffect(() => {
     if (!isLoading && (!user || !user.isAdmin)) {
@@ -251,12 +267,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Top bar — shared mobile + desktop */}
+        {/* Top bar */}
         <header
           className="sticky top-0 z-30 flex items-center justify-between px-5 py-3 glass-blur"
           style={{ borderBottom: "1px solid var(--border)" }}
         >
-          {/* Mobile: logo · Desktop: page title */}
           <div>
             <p className="hidden lg:block text-lg font-extrabold" style={{ color: "var(--text-primary)" }}>
               {NAV_ITEMS.find((n) => n.href === pathname)?.label ?? "Admin"}
